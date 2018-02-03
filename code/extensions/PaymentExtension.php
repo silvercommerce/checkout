@@ -1,5 +1,11 @@
 <?php
 
+namespace SilverCommerce\Checkout\Extensions;
+
+use SilverStripe\ORM\DataExtension;
+use SilverCommerce\OrdersAdmin\Model\Invoice;
+use SilverCommerce\OrdersAdmin\Model\Estimate;
+
 /**
  * Add association to an order to payments and add
  * setting order status on capture.
@@ -8,10 +14,10 @@
  * @package checkout
  * @subpackage extensions
  */
-class OrdersPaymentExtension extends DataExtension
+class PaymentExtension extends DataExtension
 {
     private static $has_one = array(
-        'Order' => 'Order'
+        'Invoice' => Invoice::class
     );
 
     /**
@@ -22,18 +28,11 @@ class OrdersPaymentExtension extends DataExtension
      */
     public function onCaptured($response)
     {
-        $order = $this->owner->Order();
+        $order = $this->owner->Invoice();
 
-        if ($order->exists()) {    
+        if ($order->exists()) {
             $payment_amount = Checkout::round_up($this->owner->getAmount(), 2);
             $order_amount = Checkout::round_up($order->Total, 2);
-
-            // First ensure we have an order (not an estimate)
-            if ($order instanceof Estimate) {            
-                $order->convertToOrder();
-                $order->write();
-                $order = Order::get()->byID($order->ID);
-            }
 
             // If our payment is the value of the order, mark paid
             // else mark part paid
@@ -55,7 +54,7 @@ class OrdersPaymentExtension extends DataExtension
      */
     public function onRefunded($response)
     {
-        $order = $this->owner->Order();
+        $order = $this->owner->Invoice();
 
         if ($order->exists()) {
             $order->markRefunded();
@@ -71,10 +70,10 @@ class OrdersPaymentExtension extends DataExtension
      */
     public function onVoid($response)
     {
-        $order = $this->owner->Order();
+        $order = $this->owner->Invoice();
 
         if ($order->exists()) {
-            $order->markRefunded();
+            $order->markCancelled();
             $order->write();
         }
     }

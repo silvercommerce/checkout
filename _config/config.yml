@@ -1,29 +1,16 @@
 ---
-Name: orderconfig
+Name: checkoutconfig
 ---
-LeftAndMain:
-  extra_requirements_css:
-    - orders/css/admin.css
-
 ## Extensions
-Controller:
+SilverStripe\Control\Controller:
   extensions:
-    - OrdersControllerExtension
-SiteConfig:
+    - SilverCommerce\Checkout\Extensions\ControllerExtension
+SilverStripe\SiteConfig\SiteConfig:
   extensions:
-    - OrdersSiteConfigExtension
-Member:
+    - SilverCommerce\Checkout\Extensions\SiteConfigExtension
+SilverCommerce\OrdersAdmin\Model\Invoice:
   extensions:
-    - OrdersMemberExtension
-Group:
+    - SilverStripe\Omnipay\Extensions\Payable
+SilverStripe\Omnipay\Model\Payment:
   extensions:
-    - OrdersGroupExtension
-Order:
-  extensions:
-    - Payable
-Payment:
-  extensions:
-    - OrdersPaymentExtension
-Users_Register_Controller:
-  extensions:
-    - OrdersUsers_Register_ControllerExtension
+    - SilverCommerce\Checkout\Extensions\PaymentExtension
