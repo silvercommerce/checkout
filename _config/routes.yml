@@ -2,6 +2,6 @@
 Name: checkoutroutes
 After: framework/routes#rootroutes
 ---
-Director:
+SilverStripe\Control\Director:
   rules:
     'checkout//$Action/$ID/$OtherID': 'SilverCommerce\Checkout\Control\Checkout'
