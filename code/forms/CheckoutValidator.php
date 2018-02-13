@@ -1,5 +1,13 @@
 <?php
 
+namespace SilverCommerce\Checkout\Forms;
+
+use SilverStripe\Forms\RequiredFields;
+
+/**
+ * Custom validation for our checkout details
+ * 
+ */
 class CheckoutValidator extends RequiredFields
 {
     public function php($data) {    

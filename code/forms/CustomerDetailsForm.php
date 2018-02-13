@@ -1,16 +1,59 @@
 <?php
+
+namespace SilverCommerce\Checkout\Forms;
+
+use SilverStripe\Forms\Form;
+use SilverStripe\Forms\FieldList;
+use SilverStripe\Forms\CompositeField;
+use SilverStripe\Forms\TextField;
+use SilverStripe\Forms\EmailField;
+use SilverStripe\Forms\DropdownField;
+use SilverStripe\Forms\CheckboxField;
+use SilverStripe\Forms\FormAction;
+use SilverStripe\Forms\HeaderField;
+use SilverStripe\Forms\ConfirmedPasswordField;
+use SilverStripe\Forms\RequiredFields;
+use SilverStripe\Security\Security;
+use SilverStripe\Core\Config\Config;
+use SilverStripe\i18n\i18n;
+use SilverCommerce\Checkout\Control\Checkout;
+use SilverCommerce\ContactAdmin\Model\ContactLocation;
+use CheckoutValidator;
+
 /**
- * Description of CheckoutForm
+ * Form for collecting customer details and assigning them to
+ * an estimate
  *
- * @author morven
+ * @package checkout
  */
 class CustomerDetailsForm extends Form
 {
-    public function __construct($controller, $name = "CustomerDetailsForm")
+    /**
+     * Estimate associateed with this form.
+     *
+     * @var Estimate
+     */
+    protected $estimate;
+
+    public function getEstimate() {
+        return $this->estimate;
+    }
+
+    public function setEstimate(Estimate $estimate) {
+        $this->estimate = $estimate;
+        return $this;
+    }
+
+    public function getSession()
     {
-        $member = Member::currentUser();
-        $cart = $this->getShoppingCart();     
-        
+        $this
+            ->getController()
+            ->getRequest()
+            ->getSession();
+    }
+
+    public function __construct($controller, $name = "CustomerDetailsForm", Estimage $estimate)
+    {
         parent::__construct(
             $controller, 
             $name, 
@@ -18,7 +61,12 @@ class CustomerDetailsForm extends Form
             $actions = FieldList::create()
         );
         
-        $data = Session::get("FormInfo.{$this->FormName()}.settings"); 
+        $member = Security::getCurrentUser();
+        $contact = $member->Contact();
+        $this->setEstimate($estimate);
+        $session = $this->getSession();
+        
+        $data = $session->get("FormInfo.{$this->FormName()}.settings"); 
 
         // Set default form parameters
         $new_billing = isset($data['NewBilling']) ? $data['NewBilling'] : false;
@@ -26,37 +74,64 @@ class CustomerDetailsForm extends Form
         $new_shipping = isset($data['NewShipping']) ? $data['NewShipping'] : false;
 
         $personal_fields = CompositeField::create(
-            TextField::create('FirstName', _t('Checkout.FirstName', 'First Name(s)')),
-            TextField::create('Surname', _t('Checkout.Surname', 'Surname')),
-            TextField::create("Company", _t('Checkout.Company', "Company"))
-                ->setRightTitle(_t("Checkout.Optional", "Optional")),
-            EmailField::create('Email', _t('Checkout.Email', 'Email')),
-            TextField::create('PhoneNumber', _t('Checkout.Phone', 'Phone Number'))
+            TextField::create(
+                'FirstName',
+                _t('Checkout.FirstName', 'First Name(s)')
+            ),
+            TextField::create(
+                'Surname',
+                _t('Checkout.Surname', 'Surname')
+            ),
+            TextField::create(
+                "Company",
+                _t('Checkout.Company', "Company")
+            )->setRightTitle(_t("Checkout.Optional", "Optional")),
+            EmailField::create(
+                'Email',
+                _t('Checkout.Email', 'Email')
+            ),
+            TextField::create(
+                'PhoneNumber',
+                _t('Checkout.Phone', 'Phone Number')
+            )
         )->setName("PersonalFields");
 
         $address_fields = CompositeField::create(
-            TextField::create('Address1', _t('Checkout.Address1', 'Address Line 1')),
-            TextField::create('Address2', _t('Checkout.Address2', 'Address Line 2'))
-                ->setRightTitle(_t("Checkout.Optional", "Optional")),
-            TextField::create('City', _t('Checkout.City', 'City')),
-            TextField::create('State', _t('Checkout.StateCounty', 'State/County')),
-            TextField::create('PostCode', _t('Checkout.PostCode', 'Post Code')),
-            CountryDropdownField::create(
+            TextField::create(
+                'Address1',
+                _t('Checkout.Address1', 'Address Line 1')
+            ),
+            TextField::create(
+                'Address2',
+                _t('Checkout.Address2', 'Address Line 2')
+            )->setRightTitle(_t("Checkout.Optional", "Optional")),
+            TextField::create(
+                'City',
+                _t('Checkout.City', 'City')
+            ),
+            TextField::create(
+                'State',
+                _t('Checkout.StateCounty', 'State/County')
+            ),
+            TextField::create(
+                'PostCode',
+                _t('Checkout.PostCode', 'Post Code')
+            ),
+            DropdownField::create(
                 'Country',
                 _t('Checkout.Country', 'Country'),
-                null,
-                'GB'
-            )
+                i18n::getData()->getCountries()
+            )->setEmptyString("")
         )->setName("AddressFields");
 
         // Is user logged in and has saved addresses
-        if ($member && $member->Addresses()->exists()) {
+        if ($contact && $contact->Locations()->exists()) {
             // Generate saved address dropdown
             $saved_billing = CompositeField::create(
                 DropdownField::create(
                     'BillingAddress',
                     _t('Checkout.BillingAddress','Billing Address'),
-                    $member->Addresses()->map()
+                    $contact->Locations()->map()
                 ),
                 FormAction::create(
                     'doAddNewBilling',
@@ -80,7 +155,7 @@ class CustomerDetailsForm extends Form
                 DropdownField::create(
                     'ShippingAddress',
                     _t('Checkout.ShippingAddress','Shipping Address'),
-                    $member->Addresses()->map()
+                    $contact->Locations()->map()
                 ),
                 FormAction::create(
                     'doAddNewShipping',
@@ -93,7 +168,7 @@ class CustomerDetailsForm extends Form
             $saved_billing = null;
         }
 
-        if (!$new_billing && $member && $member->Addresses()->exists()) {
+        if (!$new_billing && $contact && $contact->Locations()->exists()) {
             $fields->add($saved_billing);
         } else {
             $fields->add(
@@ -118,7 +193,7 @@ class CustomerDetailsForm extends Form
         }
 
         // If cart is deliverable, add shipping detail fields
-        if (!$cart->isCollection() && $cart->isDeliverable()) {
+        if (!$estimate->isCollection() && $estimate->isDeliverable()) {
             $fields->add(
                 CheckboxField::create(
                     'DuplicateDelivery',
@@ -146,7 +221,7 @@ class CustomerDetailsForm extends Form
                 )
             )->setName("AddressFields");
 
-            if ($member && $member->Addresses()->exists()) {
+            if ($contact && $contact->Locations()->exists()) {
                 $daddress_fields->push(
                     FormAction::create(
                         'doUseSavedShipping',
@@ -156,7 +231,7 @@ class CustomerDetailsForm extends Form
                 );
             }
             
-            if (!$new_shipping && $member && $member->Addresses()->count() > 1) {
+            if (!$new_shipping && $contact && $contact->Locations()->count() > 1) {
                 $fields->add(
                     $saved_shipping            
                 );
@@ -235,7 +310,7 @@ class CustomerDetailsForm extends Form
                 'PhoneNumber'
             ));
         }
-        if (!$cart->isCollection() && $cart->isDeliverable()) {
+        if (!$estimate->isCollection() && $estimate->isDeliverable()) {
             if (!$new_shipping && $member && $member->Addresses()->exists()) {
                 $validator->addRequiredField('ShippingAddress');
             } else {
@@ -253,16 +328,6 @@ class CustomerDetailsForm extends Form
         $this->setValidator($validator);
         
         $this->setTemplate($this->ClassName);
-    }
-    
-    public function getShoppingCart()
-    {
-        return ShoppingCart::get();
-    }
-    
-    public function getBackURL()
-    {
-        return ShoppingCart::get()->Link();
     }
 
     /** ## Form Processing ## **/
@@ -295,8 +360,11 @@ class CustomerDetailsForm extends Form
         if (!isset($data['DuplicateDelivery'])) {
             $data['DuplicateDelivery'] = 0;
         }
-        Session::set("FormInfo.{$this->FormName()}.settings", $data);
-        return $this->controller->redirectBack();        
+
+        $session = $this->getSession();
+        $session->set("FormInfo.{$this->FormName()}.settings", $data);
+        
+        return $this->getController()->redirectBack();        
     }
 
     /**
@@ -309,11 +377,11 @@ class CustomerDetailsForm extends Form
      */
     public function doContinue($data)
     {        
-        $member = Member::currentUser();
-        $cart = Injector::inst()->create('ShoppingCart');
+        $member = Security::getCurrentUser();
+        $session = $this->getSession();
         
         if (!isset($data['Address1']) && isset($data['BillingAddress'])) {
-            $billing_address = MemberAddress::get()->byID($data['BillingAddress']);
+            $billing_address = ContactLocation::get()->byID($data['BillingAddress']);
             foreach ($billing_address->toMap() as $key => $value) {
                 $data[$key] = $value;
             }
@@ -330,20 +398,20 @@ class CustomerDetailsForm extends Form
             $data['DeliveryPostCode'] = isset($data['PostCode']) ? $data['PostCode'] : '';
             $data['DeliveryCountry'] = isset($data['Country']) ? $data['Country'] : '';
         } elseif (!isset($data['DeliveryAddress1']) && isset($data['ShippingAddress'])) {
-            $shipping_address = MemberAddress::get()->ByID($data['ShippingAddress']);
+            $shipping_address = ContactLocation::get()->ByID($data['ShippingAddress']);
             foreach ($shipping_address->toMap() as $key => $value) {
                 $data['Delivery'.$key] = $value;
             }
         }
 
-        Session::set("FormInfo.{$this->FormName()}.settings",$data);       
+        $session->set("FormInfo.{$this->FormName()}.settings",$data);       
         
         if (!$member && (!Checkout::config()->guest_checkout || isset($data['Password']))) {
             $this->registerUser($data);
         }
 
         if ($member) {
-            $estimate = $cart->getEstimate();
+            $estimate = $this->getEstimate();
             $this->saveInto($estimate);
 
             foreach ($data as $key => $value) {
@@ -358,7 +426,7 @@ class CustomerDetailsForm extends Form
             }
         }
             
-        Session::set('Checkout.CustomerDetails.data',$data);
+        $session->set('Checkout.CustomerDetails.data',$data);
 
         $url = $this
             ->controller
@@ -372,10 +440,10 @@ class CustomerDetailsForm extends Form
     public function registerUser($data) 
     {
         $url = $this
-            ->controller
+            ->getController()
             ->Link("finish");
-
-        Session::set('BackURL',$url);
+        $session = $this->getSession();
+        $session->set('BackURL',$url);
 
         $reg_con = Injector::inst()->create('Users_Register_Controller');
         $reg_con->doRegister($data,$this);
@@ -389,7 +457,7 @@ class CustomerDetailsForm extends Form
      */
     private function save_billing_address($data)
     {
-        $member = Member::currentUser();
+        $member = Security::getCurrentUser();
         
         // If the user ticked "save address" then add to their account
         if ($member && array_key_exists('SaveBillingAddress', $data) && $data['SaveBillingAddress'] == 1) {
@@ -399,28 +467,20 @@ class CustomerDetailsForm extends Form
             $member->Surname = ($member->Surname) ? $member->Surname : $data['Surname'];
             $member->Company = ($member->Company) ? $member->Company : $data['Company'];
             $member->PhoneNumber = ($member->PhoneNumber) ? $member->PhoneNumber : $data['PhoneNumber'];
-            
-            $address = MemberAddress::create();
-            $address->Company = $data['Company'];
-            $address->FirstName = $data['FirstName'];
-            $address->Surname = $data['Surname'];
-            $address->Address1 = $data['Address1'];
-            $address->Address2 = $data['Address2'];
-            $address->City = $data['City'];
-            $address->State = $data['Stste'];
-            $address->PostCode = $data['PostCode'];
-            $address->Country = $data['Country'];
-            $address->OwnerID = $member->ID;
-            $address->write();
-
-            $member->Addresses()->add($address);
             $member->write();       
+            
+            $contact = $member->Contact();
+
+            $address = ContactLocation::create();
+            $assress->update($data);
+            $address->ContactID = $contact->ID;
+            $address->write();
         }
     }
 
     private function save_shipping_address($data)
     {
-        $member = Member::currentUser();
+        $member = Security::getCurrentUser();
         
         // If the user ticked "save address" then add to their account
         if ($member && array_key_exists('SaveShippingAddress', $data) && $data['SaveShippingAddress'] == 1) {
@@ -430,8 +490,10 @@ class CustomerDetailsForm extends Form
             $member->Surname = ($member->Surname) ? $member->Surname : $data['Surname'];
             $member->Company = ($member->Company) ? $member->Company : $data['Company'];
             $member->PhoneNumber = ($member->PhoneNumber) ? $member->PhoneNumber : $data['PhoneNumber'];
+            $member->write();            
             
-            $address = MemberAddress::create();
+            $contact = $member->Contact();
+            $address = ContactLocation::create();
             $address->Company = $data['DeliveryCompany'];
             $address->FirstName = $data['DeliveryFirstName'];
             $address->Surname = $data['DeliverySurname'];
@@ -441,11 +503,8 @@ class CustomerDetailsForm extends Form
             $address->PostCode = $data['DeliveryPostCode'];
             $address->State = $data['DeliveryState'];
             $address->Country = $data['DeliveryCountry'];
-            $address->OwnerID = $member->ID;
+            $address->ContactID = $contact->ID;
             $address->write();
-
-            $member->Addresses()->add($address);
-            $member->write();            
         }
     }
 }

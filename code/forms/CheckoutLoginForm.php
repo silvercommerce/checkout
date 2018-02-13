@@ -1,10 +1,15 @@
 <?php
+
+namespace SilverCommerce\Checkout\Forms;
+
+use SilverStripe\Security\MemberAuthenticator\MemberLoginForm;
+use SilverStripe\Control\Director;
+
 /**
  * Log-in form for the "member" authentication method that extends the
  * default login method
  *
  * @package checkout
- * @author i-lateral (http://www.i-lateral.com)
  */
 class CheckoutLoginForm extends MemberLoginForm
 {
@@ -21,9 +26,14 @@ class CheckoutLoginForm extends MemberLoginForm
         if ($this->performLogin($data)) {
             $this->logInUserAndRedirect($data);
         } else {
+            $session = $this
+                ->getController()
+                ->getRequest()
+                ->getSession();
+
             if (array_key_exists('Email', $data)) {
-                Session::set('SessionForms.MemberLoginForm.Email', $data['Email']);
-                Session::set('SessionForms.MemberLoginForm.Remember', isset($data['Remember']));
+                $session->set('SessionForms.MemberLoginForm.Email', $data['Email']);
+                $session->set('SessionForms.MemberLoginForm.Remember', isset($data['Remember']));
             }
 
             if (isset($_REQUEST['BackURL'])) {
@@ -33,15 +43,19 @@ class CheckoutLoginForm extends MemberLoginForm
             }
 
             if ($backURL) {
-                Session::set('BackURL', $backURL);
+                $session->set('BackURL', $backURL);
             }
 
             // Show the right tab on failed login
-            $loginLink = Director::absoluteURL($this->controller->Link());
+            $loginLink = Director::absoluteURL($this->getController()->Link());
+
             if ($backURL) {
                 $loginLink .= '?BackURL=' . urlencode($backURL);
             }
-            $this->controller->redirect($loginLink . '#' . $this->FormName() .'_tab');
+
+            return $this
+                ->getController()
+                ->redirect($loginLink . '#' . $this->FormName() .'_tab');
         }
     }
 }
