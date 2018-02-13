@@ -3,6 +3,7 @@
 namespace SilverCommerce\Checkout\Extensions;
 
 use SilverStripe\ORM\DataExtension;
+use SilverStripe\Forms\CheckboxField;
 use SilverStripe\Forms\ToggleCompositeField;
 use SilverStripe\Forms\HTMLEditor\HTMLEditorField;
 
@@ -15,16 +16,42 @@ use SilverStripe\Forms\HTMLEditor\HTMLEditorField;
 class SiteConfigExtension extends DataExtension
 {
     private static $db = [
+        'CheckoutShowTax' => "Boolean",
+        'CheckoutLoginForm' => "Boolean",
+        'CheckoutAllowGuest' => "Boolean",
+        'CheckoutAllowCollect' => "Boolean",
         'PaymentSuccessContent' => 'HTMLText',
         'PaymentFailerContent'  => 'HTMLText',
     ];
 
     public function updateCMSFields(FieldList $fields)
     {
-        // Payment options
+        $checkout_fields = ToggleCompositeField::create(
+            'CheckoutSettings',
+            _t("Checkout.CheckoutSettings", "Checkout Settings"),
+            [
+                CheckboxField::create(
+                    'CheckoutShowTax',
+                    _t("Checkout.CheckoutShowTax", "Show Tax")
+                ),
+                CheckboxField::create(
+                    'CheckoutLoginForm',
+                    _t("Checkout.CheckoutLoginForm", "Show Login Form")
+                ),
+                CheckboxField::create(
+                    'CheckoutAllowGuest',
+                    _t("Checkout.CheckoutAllowGuest", "Allow Guest Checkout")
+                ),
+                CheckboxField::create(
+                    'CheckoutAllowCollect',
+                    _t("Checkout.CheckoutAllowCollect", "Allow Click and Collect")
+                )
+            ]
+        );
+
         $payment_fields = ToggleCompositeField::create(
             'PaymentSettings',
-            _t("Orders.PaymentSettings", "Payment Settings"),
+            _t("Checkout.PaymentSettings", "Payment Settings"),
             [
                 HTMLEditorField::create(
                     'PaymentSuccessContent',
@@ -38,9 +65,12 @@ class SiteConfigExtension extends DataExtension
             ]
         );
 
-        $fields->addFieldToTab(
+        $fields->addFieldsToTab(
             'Root.Shop',
-            $payment_fields
+            [
+                $checkout_fields,
+                $payment_fields
+            ]
         );
     }
 }
