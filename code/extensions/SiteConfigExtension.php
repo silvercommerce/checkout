@@ -5,6 +5,7 @@ namespace SilverCommerce\Checkout\Extensions;
 use SilverStripe\ORM\DataExtension;
 use SilverStripe\Forms\CheckboxField;
 use SilverStripe\Forms\ToggleCompositeField;
+use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\HTMLEditor\HTMLEditorField;
 
 /**

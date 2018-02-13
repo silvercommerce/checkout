@@ -16,9 +16,9 @@ use SilverCommerce\OrdersAdmin\Model\Estimate;
  */
 class PaymentExtension extends DataExtension
 {
-    private static $has_one = array(
+    private static $has_one = [
         'Invoice' => Invoice::class
-    );
+    ];
 
     /**
      * Process attached order when payment is taken
