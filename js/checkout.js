@@ -1,23 +1,23 @@
 
-var check = document.getElementById("DuplicateDelivery");
+var check = document.getElementById("CustomerDetailsForm_CustomerForm_DuplicateDelivery");
 
 if (check != null) {
     check.onclick = switchDelivery;
 
     function switchDelivery() {
         if (check.checked == true) {
-            if (document.getElementById("DeliveryFields_Holder")) {
-                document.getElementById("DeliveryFields_Holder").style.display = "none";
+            if (document.getElementById("CustomerDetailsForm_CustomerForm_DeliveryFields_Holder")) {
+                document.getElementById("CustomerDetailsForm_CustomerForm_DeliveryFields_Holder").style.display = "none";
             }
-            if(document.getElementById("SavedShipping_Holder")) {
-                document.getElementById("SavedShipping_Holder").style.display = "none";
+            if(document.getElementById("CustomerDetailsForm_CustomerForm_SavedShipping_Holder")) {
+                document.getElementById("CustomerDetailsForm_CustomerForm_SavedShipping_Holder").style.display = "none";
             }
         } else {
-            if (document.getElementById("DeliveryFields_Holder")) {
-                document.getElementById("DeliveryFields_Holder").style.display = "block";
+            if (document.getElementById("CustomerDetailsForm_CustomerForm_DeliveryFields_Holder")) {
+                document.getElementById("CustomerDetailsForm_CustomerForm_DeliveryFields_Holder").style.display = "block";
             }
-            if(document.getElementById("SavedShipping_Holder")) {
-                document.getElementById("SavedShipping_Holder").style.display = "block";
+            if(document.getElementById("CustomerDetailsForm_CustomerForm_SavedShipping_Holder")) {
+                document.getElementById("CustomerDetailsForm_CustomerForm_SavedShipping_Holder").style.display = "block";
             }
         }
     }
