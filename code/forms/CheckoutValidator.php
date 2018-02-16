@@ -12,7 +12,11 @@ class CheckoutValidator extends RequiredFields
 {
     public function php($data)
     {
-        if ($this->form->buttonClicked()->actionName() != 'doContinue') {
+        // Find the button that was clicked
+        $handler = $this->form->getRequestHandler();
+        $action = $handler ? $handler->buttonClicked() : null;
+        
+        if ($action && $action->actionName() != 'doContinue') {
             $this->removeValidation();
         }
 
