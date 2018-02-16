@@ -1,5 +1,5 @@
 <% require css('checkout/css/checkout.css') %>
-<% require javascript('checkout/js/checkout.js') %>
+<% require javascript('checkout/js/checkout.min.js') %>
 
 <div class="content-container container checkout-checkout typography">
     <h1>$Title</h1>

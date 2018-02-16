@@ -1,31 +1,46 @@
+var checkout_form = {
+    delivery_check: null,
+    delivery_fields: null,
+    save_address: null,
 
-var check = document.getElementById("CustomerDetailsForm_CustomerForm_DuplicateDelivery");
-
-if (check != null) {
-    check.onclick = switchDelivery;
-
-    function switchDelivery() {
-        if (check.checked == true) {
-            if (document.getElementById("CustomerDetailsForm_CustomerForm_DeliveryFields_Holder")) {
-                document.getElementById("CustomerDetailsForm_CustomerForm_DeliveryFields_Holder").style.display = "none";
+    switchDelivery: function() {
+        if (this.delivery_check && this.delivery_check.checked == true) {
+            if (this.delivery_fields) {
+                this.delivery_fields.style.display = "none";
             }
-            if(document.getElementById("CustomerDetailsForm_CustomerForm_SavedShipping_Holder")) {
-                document.getElementById("CustomerDetailsForm_CustomerForm_SavedShipping_Holder").style.display = "none";
+            if(this.save_address) {
+                this.save_address.style.display = "none";
             }
         } else {
-            if (document.getElementById("CustomerDetailsForm_CustomerForm_DeliveryFields_Holder")) {
-                document.getElementById("CustomerDetailsForm_CustomerForm_DeliveryFields_Holder").style.display = "block";
+            if (this.delivery_fields) {
+                this.delivery_fields.style.display = "block";
             }
-            if(document.getElementById("CustomerDetailsForm_CustomerForm_SavedShipping_Holder")) {
-                document.getElementById("CustomerDetailsForm_CustomerForm_SavedShipping_Holder").style.display = "block";
+            if(this.save_address) {
+                this.save_address.style.display = "block";
             }
         }
-    }
+    },
+    init: function() {
+        this.delivery_check = document.getElementById("CustomerDetailsForm_CustomerForm_DuplicateDelivery");
+        this.delivery_fields = document.getElementById("CustomerDetailsForm_CustomerForm_DeliveryFields_Holder");
+        this.save_address = document.getElementById("CustomerDetailsForm_CustomerForm_SavedShipping_Holder");
 
-    switchDelivery();
-}    
+        if (this.delivery_check != null) {
+            var self = this;
+            this.delivery_check.addEventListener(
+                "change",
+                this.switchDelivery.bind(this),
+                false
+            );
+            this.switchDelivery();
+        }
+    }
+}
+
+checkout_form.init();
 
 var form = document.getElementById("Form_GatewayForm");
+
 if (form != null && form.length) {
     var button = document.getElementById("Form_GatewayForm_action_doContinue");   
     if (button != null) {
