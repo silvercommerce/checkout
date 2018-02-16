@@ -20,7 +20,6 @@ class SiteConfigExtension extends DataExtension
         'CheckoutShowTax' => "Boolean",
         'CheckoutLoginForm' => "Boolean",
         'CheckoutAllowGuest' => "Boolean",
-        'CheckoutAllowCollect' => "Boolean",
         'PaymentSuccessContent' => 'HTMLText',
         'PaymentFailerContent'  => 'HTMLText',
     ];
@@ -42,10 +41,6 @@ class SiteConfigExtension extends DataExtension
                 CheckboxField::create(
                     'CheckoutAllowGuest',
                     _t("Checkout.CheckoutAllowGuest", "Allow Guest Checkout")
-                ),
-                CheckboxField::create(
-                    'CheckoutAllowCollect',
-                    _t("Checkout.CheckoutAllowCollect", "Allow Click and Collect")
                 )
             ]
         );
