@@ -10,10 +10,12 @@ use SilverStripe\Forms\RequiredFields;
  */
 class CheckoutValidator extends RequiredFields
 {
-    public function php($data) {    
-        if($this->form->buttonClicked()->actionName() != 'doContinue') {
+    public function php($data)
+    {
+        if ($this->form->buttonClicked()->actionName() != 'doContinue') {
             $this->removeValidation();
         }
+
         if (isset($data['DuplicateDelivery']) && $data['DuplicateDelivery'] == 1) {
             $this->removeRequiredField('ShippingAddress');
             $this->removeRequiredField('DeliveryFirstName');
@@ -23,6 +25,7 @@ class CheckoutValidator extends RequiredFields
             $this->removeRequiredField('DeliveryPostCode');
             $this->removeRequiredField('DeliveryCountry');
         }
-        return parent::php($data);        
-    }    
+
+        return parent::php($data);
+    }
 }
