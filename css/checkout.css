@@ -1,6 +1,6 @@
 /* Checkout
 ---------------------------------------- */
-.checkout-checkout form {
+.checkout-container form {
     width: auto;
     max-width: none;
 }
@@ -33,15 +33,15 @@
 
 /* Checkout Order Summary
 --------------------------------------- */
-.checkout-checkout .checkout-order-summary table {
+.checkout-container .checkout-order-summary table {
     width: 100%;
 }
 
-.checkout-checkout .checkout-order-summary .text-right {
+.checkout-container .checkout-order-summary .text-right {
     text-align: right;
 }
 
-.checkout-checkout .checkout-order-summary .total td {
+.checkout-container .checkout-order-summary .total td {
     font-size: 2em;
     color: #b80000;
     padding-top: 0.5em;

@@ -1,14 +1,15 @@
-<% require css('orders/css/checkout.css') %>
-<% require javascript('orders/js/checkout.js') %>
+<% require css('checkout/css/checkout.css') %>
+<% require javascript('checkout/js/checkout.min.js') %>
 
-<div class="content-container container checkout-payment typography">
+<div class="content-container container checkout-container typography">
     <h1><%t Checkout.Summary "Summary" %></h1>
     <p><%t Checkout.SummaryCopy "Please review your personal information before proceeding and entering your payment details." %></p>
 
     <div class="checkout-payment-summary row units-row line">
-        <% with $Order %>
+        <% with $Estimate %>
                 <div class="unit-25 unit size1of3 col-xs-12 col-sm-4">
                     <h2><%t Checkout.BillingDetails "Billing Details" %></h2>
+
                     <p>
                         <% if $Company %>
                             <strong><%t Checkout.Company "Company" %>:</strong> $Company<br/>
@@ -24,9 +25,10 @@
                         <strong><%t Checkout.PostCode "Post Code" %>:</strong> $PostCode<br/>
                         <strong><%t Checkout.Country "Country" %>:</strong> <% if $CountryFull %>$CountryFull<% else %>$Country<% end_if %>
                     </p>
-                    <% if $Top.ShoppingCart.isDeliverable %>                    
+
+                    <% if $isDeliverable %>                    
                         <h3><%t Checkout.DeliveryDetails "Delivery Details" %></h3>
-                        <% if $Top.ShoppingCart.isCollection %>
+                        <% if $isCollection %>
                             <p><%t Checkout.ItemsReservedInstore "Your items will be held instore until you collect them" %></p>
                         <% else %>
                             <p>
@@ -43,34 +45,27 @@
                                 <strong><%t Checkout.Country "Country" %>:</strong> <% if $DeliveryCountryFull %>$DeliveryCountryFull<% else %>$DeliveryCountry<% end_if %>
                             </p>
                         <% end_if %>
-                    <% end_if %>                        
+                    <% end_if %>
                 </div>
         <% end_with %>
 
-        <div class="unit-33 unit size1of3 col-xs-12 col-sm-4">
+        <div class="unit size1of3 col-xs-12 col-sm-4">
             <h2><%t Checkout.Payment "Payment" %></h2>
+
             <% if $PaymentInfo %>
                 <hr/>
                 $PaymentInfo
             <% end_if %>
+
             $GatewayForm
-            $Form
+
+            $PaymentForm
         </div>
-        <% with $Order %>
-            <div class="unit-25 unit size1of3 col-sm-4 col-xs-12">
-                <h2><%t Checkout.Order "Order" %></h2>
-                <% if $Items.Exists %>
-                <div>
-                    <% include OrderSummary %>
-                </div>
-                <% else %>
-                    <p>
-                        <strong>
-                            <%t Checkout.CartIsEmpty 'Your cart is currently empty' %>
-                        </strong>
-                    </p>
-                <% end_if %>
-            </div>
-        <% end_with %>
+
+        <div class="col-sm-4 unit size1of3">
+            <% with $Estimate %>
+                <% include SilverCommerce\Checkout\Includes\OrderSummary %>
+            <% end_with %>
+        </div>
     </div>
 </div>

@@ -1,7 +1,7 @@
 <% require css('checkout/css/checkout.css') %>
 <% require javascript('checkout/js/checkout.min.js') %>
 
-<div class="content-container container checkout-checkout typography">
+<div class="content-container container checkout-container typography">
     <article>
         <h1>$Title</h1>
         <div class="content">$Content</div>

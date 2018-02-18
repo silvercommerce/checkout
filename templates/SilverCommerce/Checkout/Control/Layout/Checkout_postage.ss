@@ -1,12 +1,13 @@
 <% require css('checkout/css/checkout.css') %>
 
-<div class="content-container container checkout-checkout typography">
+<div class="content-container container checkout-container typography">
     <h1><%t Checkout.SeelctPostageMethod "Select Postage Method" %></h1>
     
     <div class="row line">
         <div class="col-sm-4 unit size1of3">
             <h2><%t Checkout.DeliveryDetails "Delivery Details" %></h2>
-            <% with $Customer %>
+            
+            <% with $Estimate %>
                 <p>
                     <% if $DeliveryCompany %>
                         <strong><%t Checkout.Company "Company" %>:</strong> $DeliveryCompany<br/>
@@ -27,13 +28,15 @@
                 </a>
             </p>
         </div>
+
         <div class="col-sm-4 unit size1of3">
             $Form
         </div>
+
         <div class="col-sm-4 unit size1of3">
-            <% with $ShoppingCart.Estimate %>
-                <% include OrderSummary %>
-            <% end_with %>        
+            <% with $Estimate %>
+                <% include SilverCommerce\Checkout\Includes\OrderSummary %>
+            <% end_with %>
         </div>
     </div>
 </div>
