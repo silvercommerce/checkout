@@ -76,7 +76,7 @@ checkout_form.init();
 var form = document.getElementById("Form_GatewayForm");
 
 if (form != null && form.length) {
-    var button = document.getElementById("Form_GatewayForm_action_doContinue");   
+    var button = document.getElementById("Form_GatewayForm_action_doUpdatePayment");   
     if (button != null) {
         button.style.position = "absolute";
         button.style.left = "-10000px";
