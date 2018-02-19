@@ -126,7 +126,6 @@ class Checkout extends Controller
         'payment',
         'complete',
         'noestimate',
-        'CheckoutLoginForm',
         'CustomerForm',
         'PostageForm',
         'GatewayForm',
@@ -138,7 +137,7 @@ class Checkout extends Controller
      * omnipay allowed fields.
      * 
      * This map is used to send the submitted checkout data
-     * to omnipay services for payment.
+     * to omnipay services for payment.CheckoutLoginForm
      * 
      * NOTE: Be careful changing this as most of these keys are required
      * 
