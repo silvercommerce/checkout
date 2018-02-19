@@ -86,36 +86,36 @@ class Checkout extends Controller
      */
     protected $templates = [
         'index' => [
-            Checkout::class,
             'Checkout',
+            Checkout::class,
             'Page'
         ],
         'postage' => [
-            Checkout::class . '_postage',
             'Checkout_postage',
-            Checkout::class,
+            Checkout::class . '_postage',
             'Checkout',
+            Checkout::class,
             'Page'
         ],
         'payment' => [
-            Checkout::class . '_payment',
             'Checkout_payment',
-            Checkout::class,
+            Checkout::class . '_payment',
             'Checkout',
+            Checkout::class,
             'Page'
         ],
         'complete' => [
-            Checkout::class . '_complete',
             'Checkout_complete',
-            Checkout::class,
+            Checkout::class . '_complete',
             'Checkout',
+            Checkout::class,
             'Page'
         ],
         'noestimate' => [
-            Checkout::class . '_noestimate',
             'Checkout_noestimate',
-            Checkout::class,
+            Checkout::class . '_noestimate',
             'Checkout',
+            Checkout::class,
             'Page'
         ]
     ];
