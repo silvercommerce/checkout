@@ -15,6 +15,7 @@ use SilverStripe\Forms\ConfirmedPasswordField;
 use SilverStripe\Forms\RequiredFields;
 use SilverStripe\Security\Security;
 use SilverStripe\SiteConfig\SiteConfig;
+use SilverStripe\Core\Injector\Injector;
 use SilverStripe\i18n\i18n;
 use SilverCommerce\ContactAdmin\Model\Contact;
 use SilverCommerce\OrdersAdmin\Model\Estimate;
@@ -431,6 +432,7 @@ class CustomerDetailsForm extends Form
     {        
         $member = Security::getCurrentUser();
         $config = SiteConfig::config();
+        $estimate = $this->getEstimate();
         $session = $this->getSession();
         
         if (!isset($data['Address1']) && isset($data['BillingAddress'])) {
@@ -440,50 +442,52 @@ class CustomerDetailsForm extends Form
             }
         }
 
+        // If we are using the billing details for delivery, duplicate them
         if (isset($data['DuplicateDelivery']) && $data['DuplicateDelivery'] == 1) {
-            $data['DeliveryCompany'] = isset($data['Company']) ? $data['Company'] : '';
-            $data['DeliveryFirstName'] = isset($data['FirstName']) ? $data['FirstName'] : '';
-            $data['DeliverySurname'] = isset($data['Surname']) ? $data['Surname'] : '';
-            $data['DeliveryAddress1'] = isset($data['Address1']) ? $data['Address1'] : '';
-            $data['DeliveryAddress2'] = isset($data['Address2']) ? $data['Address2'] : '';
-            $data['DeliveryCity'] = isset($data['City']) ? $data['City'] : '';
-            $data['DeliveryState'] = isset($data['State']) ? $data['State'] : '';
-            $data['DeliveryPostCode'] = isset($data['PostCode']) ? $data['PostCode'] : '';
-            $data['DeliveryCountry'] = isset($data['Country']) ? $data['Country'] : '';
+            // Find any submitted data that is delivery and copy the data from
+            // the standard data
+            foreach ($data as $key => $value) {
+                if (strpos($key, "Delivery") !== false) {
+                    $non_del_key = str_replace("Delivery", "", $key);
+
+                    if (isset($data[$non_del_key]) && !empty($data[$non_del_key])) {
+                        $data[$key] = $data[$non_del_key];
+                    }
+                }
+            }
         } elseif (!isset($data['DeliveryAddress1']) && isset($data['ShippingAddress'])) {
-            $shipping_address = ContactLocation::get()->ByID($data['ShippingAddress']);
-            foreach ($shipping_address->toMap() as $key => $value) {
+            $shipping_address = ContactLocation::get()->byID($data['ShippingAddress']);
+            foreach ($shipping_address as $key => $value) {
                 $data['Delivery'.$key] = $value;
             }
         }
 
-        $session->set("FormInfo.{$this->FormName()}.settings",$data);       
-        
-        if (!$member && ($config->CheckoutAllowguest || isset($data['Password']))) {
+        if (!$member && isset($data['Password']) && isset($data['Password']["_Password"])  && !empty($data['Password']["_Password"])) {
             $this->registerUser($data);
         }
 
-        if ($member) {
-            $estimate = $this->getEstimate();
-            $this->saveInto($estimate);
+        // Update current form with any new data
+        $this->loadDataFrom($data);
+        $this->saveInto($estimate);
 
-            foreach ($data as $key => $value) {
-                $estimate->{$key} = $value;
-            }
-            
+        if ($member) {
+            $contact = $member->Contact();
+            $estimate->CustomerID = $contact->ID;
+
             if (isset($data['SaveBillingAddress']) && $data['SaveBillingAddress'] == 1) {
                 $this->save_billing_address($data);
             }
+
             if (isset($data['SaveShippingAddress']) && $data['SaveShippingAddress'] == 1) {
                 $this->save_shipping_address($data);
             }
         }
-            
-        $session->set('Checkout.CustomerDetails.data',$data);
+
+        $estimate->write();
 
         $url = $this
             ->controller
-            ->Link("finish");
+            ->Link("postage");
 
         return $this
             ->controller
@@ -518,14 +522,14 @@ class CustomerDetailsForm extends Form
             // We don't save email, as this is used for login
             $member->FirstName = ($member->FirstName) ? $member->FirstName : $data['FirstName'];
             $member->Surname = ($member->Surname) ? $member->Surname : $data['Surname'];
-            $member->Company = ($member->Company) ? $member->Company : $data['Company'];
-            $member->PhoneNumber = ($member->PhoneNumber) ? $member->PhoneNumber : $data['PhoneNumber'];
-            $member->write();       
-            
+            $member->write();
+
             $contact = $member->Contact();
+            $this->saveInto($contact);
+            $contact->write();
 
             $address = ContactLocation::create();
-            $assress->update($data);
+            $this->saveInto($address);
             $address->ContactID = $contact->ID;
             $address->write();
         }
@@ -534,18 +538,17 @@ class CustomerDetailsForm extends Form
     private function save_shipping_address($data)
     {
         $member = Security::getCurrentUser();
-        
+
         // If the user ticked "save address" then add to their account
         if ($member && array_key_exists('SaveShippingAddress', $data) && $data['SaveShippingAddress'] == 1) {
             // First save the details to the users account if they aren't set
             // We don't save email, as this is used for login
             $member->FirstName = ($member->FirstName) ? $member->FirstName : $data['FirstName'];
             $member->Surname = ($member->Surname) ? $member->Surname : $data['Surname'];
-            $member->Company = ($member->Company) ? $member->Company : $data['Company'];
-            $member->PhoneNumber = ($member->PhoneNumber) ? $member->PhoneNumber : $data['PhoneNumber'];
-            $member->write();            
-            
+            $member->write();
+
             $contact = $member->Contact();
+
             $address = ContactLocation::create();
             $address->Company = $data['DeliveryCompany'];
             $address->FirstName = $data['DeliveryFirstName'];
