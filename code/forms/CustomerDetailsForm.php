@@ -14,9 +14,11 @@ use SilverStripe\Forms\HeaderField;
 use SilverStripe\Forms\ConfirmedPasswordField;
 use SilverStripe\Forms\RequiredFields;
 use SilverStripe\Security\Security;
+use SilverStripe\Security\Member;
 use SilverStripe\SiteConfig\SiteConfig;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\i18n\i18n;
+use ilateral\SilverStripe\Users\Control\RegisterController;
 use SilverCommerce\ContactAdmin\Model\Contact;
 use SilverCommerce\OrdersAdmin\Model\Estimate;
 use SilverCommerce\ContactAdmin\Model\ContactLocation;
@@ -429,7 +431,7 @@ class CustomerDetailsForm extends Form
      * @return Redirect
      */
     public function doContinue($data)
-    {        
+    {
         $member = Security::getCurrentUser();
         $config = SiteConfig::config();
         $estimate = $this->getEstimate();
@@ -463,7 +465,11 @@ class CustomerDetailsForm extends Form
         }
 
         if (!$member && isset($data['Password']) && isset($data['Password']["_Password"])  && !empty($data['Password']["_Password"])) {
-            $this->registerUser($data);
+            $member = $this->registerUser($data);
+
+            if (!$member) {
+                return $this->redirectBack();
+            }
         }
 
         // Update current form with any new data
@@ -494,16 +500,53 @@ class CustomerDetailsForm extends Form
             ->redirect($url);
     }
 
-    public function registerUser($data) 
+    public function registerUser($data)
     {
-        $url = $this
-            ->getController()
-            ->Link("finish");
-        $session = $this->getSession();
-        $session->set('BackURL',$url);
+        // If we have the users module installed, tap into its
+        // registration process, else use the built in process.
+        if (class_exists(RegisterController::class)) {
+            $url = $this
+                ->getController()
+                ->Link("finish");
+            
+            $session = $this->getSession();
+            $session->set('BackURL',$url);
 
-        $reg_con = Injector::inst()->create('Users_Register_Controller');
-        $reg_con->doRegister($data,$this);
+            $reg_con = Injector::inst()->create(RegisterController::class);
+            $reg_con->doRegister($data,$this);
+            return false;
+        } else {
+            $member = Member::get()
+                ->filter("Email", $data["Email"])
+                ->first();
+
+            // Check if a user already exists
+            if ($member) {
+                $this->sessionMessage(
+                    "Sorry, an account already exists with those details.",
+                    "bad"
+                );
+
+                // Load errors into session and post back
+                Session::set("Form.{$form->FormName()}.data", $data);
+                return false;
+            }
+
+            $member = Member::create();
+            $this->saveInto($member);
+            $member->write();
+
+            // Add member to the customers group
+            $group = Group::get()->find("Code", "ecommerce-customers");
+            if ($group) {
+                $group->Members()->add($member);
+                $group->write();
+            }
+
+            $member->LogIn();
+
+            return $member; 
+        }
     }
 
     /**

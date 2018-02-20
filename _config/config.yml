@@ -14,3 +14,15 @@ SilverCommerce\OrdersAdmin\Model\Invoice:
 SilverStripe\Omnipay\Model\Payment:
   extensions:
     - SilverCommerce\Checkout\Extensions\PaymentExtension
+SilverStripe\Security\Group:
+  extensions:
+    - SilverCommerce\Checkout\Extensions\GroupExtension
+
+# Setup default registration config for users module
+---
+  Only:
+    moduleexists: 'i-lateral/silverstripe-users'
+---
+ilateral\SilverStripe\Users\Users:
+  require_verification: false
+  send_verification_email: false
