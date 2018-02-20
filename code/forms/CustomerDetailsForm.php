@@ -15,6 +15,8 @@ use SilverStripe\Forms\ConfirmedPasswordField;
 use SilverStripe\Forms\RequiredFields;
 use SilverStripe\Security\Security;
 use SilverStripe\Security\Member;
+use SilverStripe\Security\Group;
+use SilverStripe\Security\IdentityStore;
 use SilverStripe\SiteConfig\SiteConfig;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\i18n\i18n;
@@ -173,7 +175,7 @@ class CustomerDetailsForm extends Form
                 DropdownField::create(
                     'BillingAddress',
                     _t('Checkout.BillingAddress','Billing Address'),
-                    $contact->Locations()->map()
+                    $contact->Locations()
                 ),
                 FormAction::create(
                     'doAddNewBilling',
@@ -246,6 +248,16 @@ class CustomerDetailsForm extends Form
                         _t('Checkout.SaveBillingAddress', 'Save this address for later')
                     ))->setName("SaveBillingAddressHolder")
                 );
+
+                if ($contact && $contact->Locations()->exists()) {
+                    $return->push(
+                        FormAction::create(
+                            'doUseSavedBilling',
+                            _t('Checkout.SavedAddress', 'Use saved address')
+                        )->addextraClass('btn btn-link')
+                        ->setAttribute('formnovalidate',true)
+                    );
+                }
             }
         }
 
@@ -275,8 +287,8 @@ class CustomerDetailsForm extends Form
                 DropdownField::create(
                     'ShippingAddress',
                     _t('Checkout.ShippingAddress','Shipping Address'),
-                    $contact->Locations()->map()
-                ),
+                    $contact->Locations()
+                )->setHasEmptyDefault(false),
                 FormAction::create(
                     'doAddNewShipping',
                     _t('Checkout.NewAddress', 'Use different address')
@@ -468,7 +480,11 @@ class CustomerDetailsForm extends Form
             $member = $this->registerUser($data);
 
             if (!$member) {
-                return $this->redirectBack();
+                return $this
+                    ->getController()
+                    ->redirectBack();
+            } else {
+                $data['SaveBillingAddress'] = true;
             }
         }
 
@@ -502,6 +518,8 @@ class CustomerDetailsForm extends Form
 
     public function registerUser($data)
     {
+        $session = $this->getSession();
+
         // If we have the users module installed, tap into its
         // registration process, else use the built in process.
         if (class_exists(RegisterController::class)) {
@@ -509,11 +527,13 @@ class CustomerDetailsForm extends Form
                 ->getController()
                 ->Link("finish");
             
-            $session = $this->getSession();
             $session->set('BackURL',$url);
 
-            $reg_con = Injector::inst()->create(RegisterController::class);
-            $reg_con->doRegister($data,$this);
+            $reg_con = Injector::inst()
+                ->get(RegisterController::class);
+
+            $reg_con
+                ->doRegister($data,$this);
             return false;
         } else {
             $member = Member::get()
@@ -528,7 +548,8 @@ class CustomerDetailsForm extends Form
                 );
 
                 // Load errors into session and post back
-                Session::set("Form.{$form->FormName()}.data", $data);
+                $session->set("Form.{$this->FormName()}.data", $data);
+                $session->set("FormInfo.{$this->FormName()}.settings", $data);
                 return false;
             }
 
@@ -538,12 +559,20 @@ class CustomerDetailsForm extends Form
 
             // Add member to the customers group
             $group = Group::get()->find("Code", "ecommerce-customers");
+            
             if ($group) {
                 $group->Members()->add($member);
                 $group->write();
             }
 
-            $member->LogIn();
+            // Login this new member temporarily
+            $identityStore = Injector::inst()
+                ->get(IdentityStore::class);
+            $identityStore->logIn(
+                $member,
+                false,
+                $this->getRequest()
+            );
 
             return $member; 
         }
