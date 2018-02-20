@@ -26,7 +26,7 @@
       },
       "require": {
           "silverstripe/framework": "~4.0",
-          "silverstripe/omnipay": "dev-master",
+          "silverstripe/silverstripe-omnipay": "dev-master",
           "silvercommerce/orders-admin": "1.*@dev"
       },
       "suggest": {
