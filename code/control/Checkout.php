@@ -496,12 +496,12 @@ class Checkout extends Controller
         if ($error) {
             $return = [
                 'Title' => _t('Checkout.OrderProblem', 'There was a problem with your order'),
-                'Content' => $site->PaymentFailerContent
+                'Content' => $site->dbobject("PaymentFailerContent")
             ];
         } else {
             $return = [
                 'Title' => _t('Checkout.ThankYouForOrder', 'Thank you for your order'),
-                'Content' => $site->PaymentSuccessContent
+                'Content' => $site->dbobject("PaymentSuccessContent")
             ];
         }
 
@@ -539,7 +539,7 @@ class Checkout extends Controller
     {
         $this->customise([
             'Title' => _t(
-                'Checkout.Opayment_datarderProblem',
+                'Checkout.OrderProblem',
                 'There was a problem with your order'
             ),
             'Content' => _t(
