@@ -1,11 +1,15 @@
 /* Checkout
 ---------------------------------------- */
-.checkout-container form {
-    width: auto;
-    max-width: none;
+.checkout-container {
+    /** Checkout form
+    ------------------------------------ */
+    form {
+        width: auto;
+        max-width: none;
+    }
 
     /* Order Summary
-    --------------------------------------- */
+    ------------------------------------ */
     .checkout-order-summary {
         table {
             width: 100%;
