@@ -33,6 +33,11 @@
           "silverstripe/cms": "Add full content management support to your site",
           "i-lateral/silverstripe-users": "Add user account management, login and registration"
       },
+      "extra": {
+          "expose": [
+              "client/dist"
+          ]
+      },
       "autoload": {
           "psr-4": {
               "SilverCommerce\\Checkout\\": "src/"

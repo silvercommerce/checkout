@@ -1,4 +1,5 @@
-<% require css('checkout/css/checkout.css') %>
+<% require css('silvercommerce/checkout: client/dist/css/checkout.min.css') %>
+<% require javascript('silvercommerce/checkout: client/dist/js/checkout.min.js') %>
 
 <div class="content-container container checkout-container typography">
     <h1><%t Checkout.SeelctPostageMethod "Select Postage Method" %></h1>
