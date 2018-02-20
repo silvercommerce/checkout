@@ -26,3 +26,5 @@ SilverStripe\Security\Group:
 ilateral\SilverStripe\Users\Users:
   require_verification: false
   send_verification_email: false
+  new_user_groups:
+      - ecommerce-customers
