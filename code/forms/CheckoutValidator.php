@@ -11,7 +11,7 @@ use SilverStripe\Forms\RequiredFields;
 class CheckoutValidator extends RequiredFields
 {
     public function php($data)
-    {
+    {   
         // Find the button that was clicked
         $handler = $this->form->getRequestHandler();
         $action = $handler ? $handler->buttonClicked() : null;
@@ -21,7 +21,6 @@ class CheckoutValidator extends RequiredFields
         }
 
         if (isset($data['DuplicateDelivery']) && $data['DuplicateDelivery'] == 1) {
-            $this->removeRequiredField('ShippingAddress');
             $this->removeRequiredField('DeliveryFirstName');
             $this->removeRequiredField('DeliverySurname');
             $this->removeRequiredField('DeliveryAddress1');

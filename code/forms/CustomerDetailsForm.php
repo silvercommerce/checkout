@@ -288,7 +288,7 @@ class CustomerDetailsForm extends Form
                     'ShippingAddress',
                     _t('Checkout.ShippingAddress','Shipping Address'),
                     $contact->Locations()
-                )->setHasEmptyDefault(false),
+                ),
                 FormAction::create(
                     'doAddNewShipping',
                     _t('Checkout.NewAddress', 'Use different address')
@@ -364,9 +364,7 @@ class CustomerDetailsForm extends Form
             $return->addRequiredField('Password');
         }
 
-        if (!$new_billing && $contact && $contact->Locations()->exists()) {
-            $return->addRequiredField('BillingAddress');
-        } else {
+        if ($new_billing || !$contact || ($contact && $contact->Locations()->exists())) {
             $return->appendRequiredFields(new RequiredFields(
                 'FirstName',
                 'Surname',
@@ -377,12 +375,8 @@ class CustomerDetailsForm extends Form
                 'Email',
                 'PhoneNumber'
             ));
-        }
 
-        if (!$estimate->isCollection() && $estimate->isDeliverable()) {
-            if (!$new_shipping && $contact && $contact->Locations()->exists()) {
-                $return->addRequiredField('ShippingAddress');
-            } else {
+            if (!$estimate->isCollection() && $estimate->isDeliverable()) {
                 $return->appendRequiredFields(new RequiredFields(
                     'DeliveryFirstName',
                     'DeliverySurname',
