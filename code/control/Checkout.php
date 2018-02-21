@@ -379,6 +379,19 @@ class Checkout extends Controller
             }
         }
 
+        // If we have just logged in, and we came from the
+        // shopping cart, merge defined estimate with the
+        // logged in users estimate
+        if (class_exists(ShoppingCart::class) && $member) {
+            $estimate = $this->getEstimate();
+            $shopping_cart = ShoppingCart::get();
+            $cart_estimate = $shopping_cart->getEstimate();
+
+            if (!$estimate || ($cart_estimate->ID != $estimate->ID)) {
+                $this->setEstimate($cart_estimate);
+            }
+        }
+
         $this->customise([
             'Title'     => _t('Checkout.Checkout', "Checkout"),
             "LoginForm" => $login_form,
