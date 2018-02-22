@@ -20,8 +20,8 @@ SilverStripe\Security\Group:
 
 # Setup default registration config for users module
 ---
-  Only:
-    moduleexists: 'i-lateral/silverstripe-users'
+Only:
+  moduleexists: 'i-lateral/silverstripe-users'
 ---
 ilateral\SilverStripe\Users\Users:
   require_verification: false
