@@ -550,6 +550,13 @@ class Checkout extends Controller
      */
     public function noestimate()
     {
+        // If the shoppingcart module is installed we should
+        // redirect to it when estimate is lost.
+        if (class_exists(ShoppingCart::class)) {
+            $shopping_cart = ShoppingCart::get();
+            return $this->redirect($shopping_cart->Link());
+        }
+
         $this->customise([
             'Title' => _t(
                 'Checkout.OrderProblem',
