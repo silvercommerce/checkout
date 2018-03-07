@@ -2,39 +2,40 @@
 
 namespace SilverCommerce\Checkout\Control;
 
-use SilverStripe\Control\Controller;
-use SilverStripe\Control\Director;
-use SilverStripe\Core\Injector\Injector;
-use SilverStripe\Control\HTTPRequest;
+use Exception;
+use NumberFormatter;
 use SilverStripe\Forms\Form;
+use SilverStripe\Control\Cookie;
 use SilverStripe\Forms\FieldList;
+use SilverStripe\Security\Member;
 use SilverStripe\Forms\FormAction;
+use SilverStripe\Control\Director;
+use SilverStripe\Security\Security;
 use SilverStripe\Forms\HiddenField;
-use SilverStripe\Forms\OptionsetField;
+use SilverStripe\Forms\HeaderField;
+use SilverStripe\Control\Controller;
+use SilverStripe\Omnipay\GatewayInfo;
+use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Forms\ReadonlyField;
 use SilverStripe\Forms\RequiredFields;
-use SilverStripe\Forms\HeaderField;
+use SilverStripe\Forms\OptionsetField;
 use SilverStripe\Forms\CompositeField;
-use SilverStripe\ORM\FieldType\DBCurrency;
-use SilverStripe\Security\Member;
-use SilverStripe\Security\MemberAuthenticator;
-use SilverStripe\Security\MemberAuthenticator\MemberLoginForm;
-use SilverStripe\Security\Security;
-use SilverStripe\CMS\Controllers\ContentController;
-use SilverStripe\Control\Cookie;
 use SilverStripe\SiteConfig\SiteConfig;
-use SilverStripe\Omnipay\GatewayFieldsFactory;
-use SilverStripe\Omnipay\GatewayInfo;
 use SilverStripe\Omnipay\Model\Payment;
-use SilverStripe\Omnipay\Service\ServiceFactory;
+use SilverStripe\Core\Injector\Injector;
+use SilverStripe\ORM\FieldType\DBCurrency;
+use SilverStripe\Security\MemberAuthenticator;
+use SilverStripe\Omnipay\GatewayFieldsFactory;
 use SilverCommerce\OrdersAdmin\Model\Estimate;
 use SilverCommerce\TaxAdmin\Helpers\MathsHelper;
+use SilverStripe\Omnipay\Service\ServiceFactory;
 use SilverCommerce\OrdersAdmin\Model\PostageArea;
-use SilverCommerce\OrdersAdmin\Tools\ShippingCalculator;
-use SilverCommerce\Checkout\Forms\CustomerDetailsForm;
+use SilverStripe\CMS\Controllers\ContentController;
 use SilverCommerce\Checkout\Forms\CheckoutLoginForm;
 use SilverCommerce\ShoppingCart\Control\ShoppingCart;
-use Exception;
+use SilverCommerce\Checkout\Forms\CustomerDetailsForm;
+use SilverCommerce\OrdersAdmin\Tools\ShippingCalculator;
+use SilverStripe\Security\MemberAuthenticator\MemberLoginForm;
 
 /**
  * Controller used to render the checkout process
@@ -62,22 +63,6 @@ class Checkout extends Controller
      * @config
      */
     private static $cron_cleaner = false;
-    
-    /**
-     * Currency symbol used by default
-     * 
-     * @var string
-     * @config
-     */
-    private static $currency_symbol = '£';
-    
-    /**
-     * International 3 character currency code to use
-     * 
-     * @var string
-     * @config
-     */
-    private static $currency_code = 'GBP';
 
     /**
      * Setup default templates for this controller
@@ -886,6 +871,10 @@ class Checkout extends Controller
         
         $order = $this->getEstimate();
         $config = SiteConfig::current_site_config();
+
+        // Get thre digit currency code
+        $number_format = new NumberFormatter($config->SiteLocale, NumberFormatter::CURRENCY);
+        $currency_code = $number_format->getTextAttribute(NumberFormatter::CURRENCY_CODE);
         
         // Map our order data to an array to omnipay
         $omnipay_data = [];
@@ -911,7 +900,7 @@ class Checkout extends Controller
             ->init(
                 $this->getPaymentMethod(),
                 MathsHelper::round_up($order->Total, 2),
-                $this->config()->currency_code
+                $currency_code
             )->setSuccessUrl($this->AbsoluteLink('complete'))
             ->setFailureUrl(Controller::join_links(
                 $this->AbsoluteLink('complete'),
