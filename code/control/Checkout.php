@@ -36,6 +36,8 @@ use SilverCommerce\ShoppingCart\Control\ShoppingCart;
 use SilverCommerce\Checkout\Forms\CustomerDetailsForm;
 use SilverCommerce\OrdersAdmin\Tools\ShippingCalculator;
 use SilverStripe\Security\MemberAuthenticator\MemberLoginForm;
+use SilverCommerce\Postage\Helpers\Parcel;
+use SilverCommerce\GeoZones\Model\Region;
 
 /**
  * Controller used to render the checkout process
@@ -175,7 +177,7 @@ class Checkout extends Controller
         return $estimate;
     }
 
-    /**
+    /**country
      * Is an estimate set? return false if not
      *
      * @return boolean
@@ -277,20 +279,27 @@ class Checkout extends Controller
     public function getPostageAreas()
     {
         $estimate = $this->getEstimate(); 
-        
-        // Get delivery data and postage areas from session
-        $country = $estimate->DeliveryCountry;
-        $postcode = $estimate->DeliveryPostCode;
 
-        // Setup ShippingCalculator
-        $postage_areas = new ShippingCalculator($postcode, $country);
-        $postage_areas
-            ->setCost($estimate->SubTotal)
-            ->setWeight($estimate->TotalWeight)
-            ->setItems($estimate->TotalItems);
+        $region = Region::get()->filter([
+            "CountryCode" => strtoupper($estimate->DeliveryCountry),
+            "Name" => $estimate->DeliveryCounty
+        ])->first();
 
-        // Loop through all postage areas and generate a new list
-        $postage_areas = $postage_areas->getPostageAreas();
+        if (isset($region)) {
+            $parcel = Parcel::create(
+                $region->CountryCode,
+                $region->Code
+            );
+
+            $parcel
+                ->setValue($estimate->SubTotal)
+                ->setWeight($estimate->TotalWeight)
+                ->setItems($estimate->TotalItems);
+
+            $postage_areas = $parcel->getPostageOptions();
+        } else {
+            $postage_areas = ArrayList::create();
+        }
 
         $this->extend("updatePostageAreas", $postage_areas);
 
@@ -605,7 +614,7 @@ class Checkout extends Controller
     /**
      * Form to find postage options and allow user to select payment
      *
-     * @return PostagePaymentForm
+     * @return Form
      */
     public function PostageForm()
     {
