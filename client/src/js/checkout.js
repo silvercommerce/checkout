@@ -23,10 +23,10 @@ var checkout_form = {
             }
         } else {
             if (this.delivery_fields) {
-                this.delivery_fields.style.display = "block";
+                this.delivery_fields.style.display = null;
             }
             if(this.save_address) {
-                this.save_address.style.display = "block";
+                this.save_address.style.display = null;
             }
         }
     },
