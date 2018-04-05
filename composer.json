@@ -28,7 +28,8 @@
           "silverstripe/framework": "~4.0",
           "silverstripe/silverstripe-omnipay": "dev-master",
           "silvercommerce/settings": "~1.0",
-          "silvercommerce/orders-admin": "1.*@dev"
+          "silvercommerce/orders-admin": "1.*@dev",
+          "silvercommerce/postage": "~1.0"
       },
       "suggest": {
           "silverstripe/cms": "Add full content management support to your site",
