@@ -10,7 +10,8 @@
             "CustomerDetailsForm_CustomerForm_DeliveryAddress1",
             "CustomerDetailsForm_CustomerForm_DeliveryCity",
             "CustomerDetailsForm_CustomerForm_DeliveryPostCode",
-            "CustomerDetailsForm_CustomerForm_DeliveryCountry"
+            "CustomerDetailsForm_CustomerForm_DeliveryCountry",
+            "CustomerDetailsForm_CustomerForm_DeliveryCounty"
         ],
 
         // Show and hide delivery fields
@@ -42,9 +43,11 @@
                 }
 
                 if (this.delivery_check && this.delivery_check.checked == true) {
-                    field.required = false;
+                    field.removeAttribute('required');
+                    field.removeAttribute('aria-required');
                 } else {
-                    field.required = true;
+                    field.setAttribute('required', true);
+                    field.setAttribute('aria-required', true);
                 }
             }
         },
