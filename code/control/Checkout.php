@@ -7,37 +7,28 @@ use NumberFormatter;
 use SilverStripe\Forms\Form;
 use SilverStripe\Control\Cookie;
 use SilverStripe\Forms\FieldList;
-use SilverStripe\Security\Member;
-use SilverStripe\Forms\FormAction;
 use SilverStripe\Control\Director;
-use SilverStripe\Security\Security;
+use SilverStripe\Forms\FormAction;
 use SilverStripe\Forms\HiddenField;
-use SilverStripe\Forms\HeaderField;
+use SilverStripe\Security\Security;
 use SilverStripe\Control\Controller;
-use SilverStripe\Omnipay\GatewayInfo;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Forms\ReadonlyField;
-use SilverStripe\Forms\RequiredFields;
+use SilverStripe\Omnipay\GatewayInfo;
 use SilverStripe\Forms\OptionsetField;
-use SilverStripe\Forms\CompositeField;
-use SilverStripe\SiteConfig\SiteConfig;
+use SilverStripe\Forms\RequiredFields;
 use SilverStripe\Omnipay\Model\Payment;
+use SilverStripe\SiteConfig\SiteConfig;
 use SilverStripe\Core\Injector\Injector;
-use SilverStripe\ORM\FieldType\DBCurrency;
-use SilverStripe\Security\MemberAuthenticator;
-use SilverStripe\Omnipay\GatewayFieldsFactory;
+use SilverCommerce\Postage\Forms\PostageForm;
 use SilverCommerce\OrdersAdmin\Model\Estimate;
+use SilverStripe\Omnipay\GatewayFieldsFactory;
+use SilverStripe\Security\MemberAuthenticator;
 use SilverCommerce\TaxAdmin\Helpers\MathsHelper;
 use SilverStripe\Omnipay\Service\ServiceFactory;
-use SilverCommerce\OrdersAdmin\Model\PostageArea;
 use SilverStripe\CMS\Controllers\ContentController;
-use SilverCommerce\Checkout\Forms\CheckoutLoginForm;
 use SilverCommerce\ShoppingCart\Control\ShoppingCart;
 use SilverCommerce\Checkout\Forms\CustomerDetailsForm;
-use SilverCommerce\OrdersAdmin\Tools\ShippingCalculator;
-use SilverStripe\Security\MemberAuthenticator\MemberLoginForm;
-use SilverCommerce\Postage\Helpers\Parcel;
-use SilverCommerce\GeoZones\Model\Region;
 
 /**
  * Controller used to render the checkout process
@@ -132,7 +123,7 @@ class Checkout extends Controller
      * @config
      */
     private static $omnipay_map = [
-        "OrderNumber" => "transactionId",
+        "Number" => "transactionId",
         "FirstName" => "firstName",
         "Surname" => "lastName",
         "Email" => "email",
@@ -142,12 +133,13 @@ class Checkout extends Controller
         "City" => "billingCity",
         "State" => "billingState",
         "PostCode" => "billingPostcode",
+        "County" => "billingState",
         "Country" => "billingCountry",
         "PhoneNumber" => "billingPhone",
         "DeliveryAddress1" => "shippingAddress1",
         "DeliveryAddress2" => "shippingAddress2",
         "DeliveryCity" => "shippingCity",
-        "DeliveryState" => "shippingState",
+        "DeliveryCounty" => "shippingState",
         "DeliveryPostCode" => "shippingPostcode",
         "DeliveryCountry" => "shippingCountry",
         "PhoneNumber" => "shippingPhone"
@@ -270,42 +262,6 @@ class Checkout extends Controller
         return $this->getMenu();
     }
 
-    /**
-     * Return a list of possible postage areas for the associated
-     * estimate.
-     *
-     * @return ArrayList
-     */
-    public function getPostageAreas()
-    {
-        $estimate = $this->getEstimate(); 
-
-        $region = Region::get()->filter([
-            "CountryCode" => strtoupper($estimate->DeliveryCountry),
-            "Name" => $estimate->DeliveryCounty
-        ])->first();
-
-        if (isset($region)) {
-            $parcel = Parcel::create(
-                $region->CountryCode,
-                $region->Code
-            );
-
-            $parcel
-                ->setValue($estimate->SubTotal)
-                ->setWeight($estimate->TotalWeight)
-                ->setItems($estimate->TotalItems);
-
-            $postage_areas = $parcel->getPostageOptions();
-        } else {
-            $postage_areas = ArrayList::create();
-        }
-
-        $this->extend("updatePostageAreas", $postage_areas);
-
-        return $postage_areas;
-    }
-
     public function init()
     {
         parent::init();
@@ -365,9 +321,13 @@ class Checkout extends Controller
 
                 $login_form
                     ->Fields()
-                    ->add(HiddenField::create("BackURL")->setValue($this->Link()));
-                
-                $login_form->setTemplate("\SilverCommerce\Checkout\Forms\CheckoutLoginForm");
+                    ->add(
+                        HiddenField::create("BackURL")
+                            ->setValue($this->Link())
+                    );
+
+                $login_form
+                    ->setTemplate("\SilverCommerce\Checkout\Forms\CheckoutLoginForm");
             } catch (Exception $e) {
                 return $this->httpError(500);
             }
@@ -386,8 +346,11 @@ class Checkout extends Controller
             }
         }
 
+        // Update customer form with current estimate
+        $customer_form->loadDataFrom($this->getEstimate());
+
         $this->customise([
-            'Title'     => _t('Checkout.Checkout', "Checkout"),
+            'Title'     => _t('SilverCommerce\Checkout.Checkout', "Checkout"),
             "LoginForm" => $login_form,
             "Form"      => $customer_form
         ]);
@@ -502,12 +465,12 @@ class Checkout extends Controller
 
         if ($error) {
             $return = [
-                'Title' => _t('Checkout.OrderProblem', 'There was a problem with your order'),
+                'Title' => _t('SilverCommerce\Checkout.OrderProblem', 'There was a problem with your order'),
                 'Content' => $site->dbobject("PaymentFailerContent")
             ];
         } else {
             $return = [
-                'Title' => _t('Checkout.ThankYouForOrder', 'Thank you for your order'),
+                'Title' => _t('SilverCommerce\Checkout.ThankYouForOrder', 'Thank you for your order'),
                 'Content' => $site->dbobject("PaymentSuccessContent")
             ];
         }
@@ -622,100 +585,41 @@ class Checkout extends Controller
         if (!$this->hasEstimate()) {
             return $this->redirect($this->Link("noestimate"));
         }
-        
-        $session = $this
-            ->getRequest()
-            ->getSession();
 
         $estimate = $this->getEstimate();
-        $validator = RequiredFields::create();
 
-        if (!$estimate->isCollection() || $estimate->isDeliverable()) {
-            $postage_areas = $this->getPostageAreas();
-            $postage_array = array();
-
-            foreach ($postage_areas as $area) {
-                $area_currency = new DBCurrency("Cost");
-                $area_currency->setValue($area->Cost);
-                $postage_array[$area->ID] = $area->Title . " (" . $area_currency->Nice() . ")";
-            }
-
-            if ($estimate->PostageID !=  0) {
-                $postage_id = $estimate->PostageID;
-            } elseif ($postage_areas->exists()) {
-                $postage_id = $postage_areas->first()->ID;
-            } else {
-                $postage_id = 0;
-            }
-
-            if (count($postage_array)) {
-                $select_postage_field = OptionsetField::create(
-                    "PostageID",
-                    _t('Checkout.PostageSelection', 'Please select your preferred postage'),
-                    $postage_array
-                )->setValue($postage_id);
-            } else {
-                $select_postage_field = ReadonlyField::create(
-                    "NoPostage",
-                    "",
-                    _t('Checkout.NoPostageSelection', 'Unfortunately we cannot deliver to your address')
-                )->addExtraClass("label")
-                ->addExtraClass("label-red");
-            }
-
-            // Setup postage fields
-            $postage_field = CompositeField::create(
-                HeaderField::create(
-                    "PostageHeader",
-                    _t('Checkout.Postage', "Postage")
-                ),
-                $select_postage_field
-            )->setName("PostageFields");
-
-            $validator->addRequiredField("PostageID");
-        } elseif ($estimate->isCollection()) {
-            $postage_field = CompositeField::create(
-                HeaderField::create(
-                    "PostageHeader",
-                    _t('Checkout.CollectionOnly', "Collection Only")
-                ),
-                ReadonlyField::create(
-                    "CollectionText",
-                    "",
-                    _t("Checkout.ItemsReservedInstore", "Your items will be held instore until you collect them")
-                )
-            )->setName("CollectionFields");
-        } elseif (!$estimate->isDeliverable()) {
-            $postage_field = CompositeField::create(
-                HeaderField::create(
-                    "PostageHeader",
-                    _t('Checkout.Postage', "Postage")
-                ),
-                ReadonlyField::create(
-                    "CollectionText",
-                    "",
-                    _t("Checkout.NoDeliveryForOrder", "Your order does not contain items that can be posted")
-                )
-            )->setName("CollectionFields");
-        } else {
-            $postage_field = null;
-        }
-
-        $form = Form::create(
+        $form = PostageForm::create(
             $this,
             "PostageForm",
-            FieldList::create(
-                $postage_field
-            ),
-            FieldList::create(
-                FormAction::create(
-                    'doSetPostage',
-                    _t('Checkout.PaymentDetails', 'Enter Payment Details')
-                )->addExtraClass('checkout-action-next btn btn-success')
-            ),
-            $validator
+            $estimate,
+            $estimate->SubTotal,
+            $estimate->TotalWeight,
+            $estimate->TotalItems,
+            $estimate->DeliveryCountry,
+            $estimate->DeliveryCounty
         );
 
+        $form->setLegend(_t('SilverCommerce\Checkout.Postage', "Postage"));
+
+        $proceed_action = $form->Actions()->fieldByName("action_doSetPostage");
+
+        if (isset($proceed_action)) {
+            $fields = $form->Fields();
+            $fields->push(HiddenField::create(
+                "CompleteURL",
+                null,
+                $this->Link("payment")
+            ));
+
+            $proceed_action
+                ->setTitle(_t(
+                    'SilverCommerce\Checkout.PayNow',
+                    "Pay Now"
+                ))->removeExtraClass("btn-secondary")
+                ->addExtraClass("btn-success");
+        }
+
+        // Extension call
         $this->extend("updatePostageForm", $form);
 
         return $form;
@@ -743,19 +647,19 @@ class Checkout extends Controller
 
             $payment_field = OptionsetField::create(
                 'PaymentMethodID',
-                _t('Checkout.PaymentSelection', 'Please choose how you would like to pay'),
+                _t('SilverCommerce\Checkout.PaymentSelection', 'Please choose how you would like to pay'),
                 $payment_methods
             )->setValue($gateway);
 
             $actions
                 ->add(FormAction::create(
                     'doUpdatePayment',
-                    _t('Checkout.ChangeGateway', 'Change Payment Type')
+                    _t('SilverCommerce\Checkout.ChangeGateway', 'Change Payment Type')
                 )->addExtraClass('checkout-action-next'));
         } catch (Exception $e) {
             $payment_field = ReadonlyField::create(
                 "PaymentMethodID",
-                _t('Checkout.PaymentSelection', 'Please choose how you would like to pay'),
+                _t('SilverCommerce\Checkout.PaymentSelection', 'Please choose how you would like to pay'),
                 $e->getMessage()
             );
         } 
@@ -796,7 +700,7 @@ class Checkout extends Controller
             FieldList::create(
                 FormAction::create(
                     "doSubmitPayment",
-                    _t("Checkout.PayNow", "Pay Now")
+                    _t("SilverCommerce\Checkout.PayNow", "Pay Now")
                 )->addExtraClass("btn btn-success btn-block")
             )
         );
@@ -807,51 +711,6 @@ class Checkout extends Controller
     }
 
     /**
-     * Set the postage on this order (as long as it is available)
-     *
-     * @param array $data
-     * @param Form $form
-     * @return Redirect
-     */
-    public function doSetPostage($data, $form)
-    {
-        $session = $this
-            ->getRequest()
-            ->getSession();
-
-        $estimate = $this->getEstimate();
-        $postage = PostageArea::get()->byID($data["PostageID"]);
-
-        // If no postage, return
-        if (!$postage) {
-            $form->sessionMessage(_t(
-                "Checkout.PostageNotFound",
-                "Selected postage not found"
-            ));
-
-            return $this->redirectBack();
-        }
-
-        // If selected postage is incorrect, return
-        $postage_areas = $this->getPostageAreas();
-
-        if (!$postage_areas->find("ID", $postage->ID)) {
-            $form->sessionMessage(_t(
-                "Checkout.PostageIncorrect",
-                "Incorrect postage selected"
-            ));
-
-            return $this->redirectBack();
-        }
-
-        // Finally assign postage to order and continue
-        $estimate->PostageID = $postage->ID;
-        $estimate->write();
-
-        return $this->redirect($this->Link("payment"));
-    }
-
-        /**
      * Update the selected payment gateway
      *
      * @param array $data
@@ -901,7 +760,7 @@ class Checkout extends Controller
         $omnipay_data["description"] = _t(
             "Order.PaymentDescription",
             "Payment for Order: {ordernumber}",
-            ['ordernumber' => $order->OrderNumber]
+            ['ordernumber' => $order->Number]
         );
 
         // Create the payment object. We pass the desired success and failure URLs as parameter to the payment

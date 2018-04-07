@@ -43,15 +43,15 @@
             </tr>
         <% end_if %>
 
-        <% if $PostageCost.RAW > 0 %>
+        <% if $PostagePrice.RAW > 0 %>
             <tr class="shipping text-right">
                 <td class="col-xs-6 size1of2">
                     <strong>
-                        <%t Checkout.Shipping 'Shipping' %>
+                        <%t Checkout.Postage 'Postage' %>
                     </strong>
                 </td>
                 <td class="col-xs-6 size1of2">
-                    {$PostageType} ({$PostageCost.Nice})
+                    {$PostagePrice.Nice}
                 </td>
             </tr>
         <% end_if %>
