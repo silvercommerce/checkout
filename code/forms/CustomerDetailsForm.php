@@ -2,29 +2,29 @@
 
 namespace SilverCommerce\Checkout\Forms;
 
+use Locale;
+use SilverStripe\i18n\i18n;
 use SilverStripe\Forms\Form;
+use SilverStripe\Security\Group;
 use SilverStripe\Forms\FieldList;
-use SilverStripe\Forms\CompositeField;
 use SilverStripe\Forms\TextField;
+use SilverStripe\Security\Member;
 use SilverStripe\Forms\EmailField;
-use SilverStripe\Forms\DropdownField;
-use SilverStripe\Forms\CheckboxField;
 use SilverStripe\Forms\FormAction;
 use SilverStripe\Forms\HeaderField;
-use SilverStripe\Forms\ConfirmedPasswordField;
-use SilverStripe\Forms\RequiredFields;
 use SilverStripe\Security\Security;
-use SilverStripe\Security\Member;
-use SilverStripe\Security\Group;
-use SilverStripe\Security\IdentityStore;
+use SilverStripe\Forms\CheckboxField;
+use SilverStripe\Forms\DropdownField;
+use SilverStripe\Forms\CompositeField;
 use SilverStripe\SiteConfig\SiteConfig;
 use SilverStripe\Core\Injector\Injector;
-use SilverStripe\i18n\i18n;
-use ilateral\SilverStripe\Users\Control\RegisterController;
+use SilverStripe\Security\IdentityStore;
 use SilverCommerce\ContactAdmin\Model\Contact;
 use SilverCommerce\OrdersAdmin\Model\Estimate;
+use SilverStripe\Forms\ConfirmedPasswordField;
 use SilverCommerce\ContactAdmin\Model\ContactLocation;
-use SilverCommerce\Checkout\Control\Checkout;
+use SilverCommerce\GeoZones\Forms\RegionSelectionField;
+use ilateral\SilverStripe\Users\Control\RegisterController;
 
 /**
  * Form for collecting customer details and assigning them to
@@ -85,27 +85,42 @@ class CustomerDetailsForm extends Form
 
         // Set default form parameters
         $data = $session->get("FormInfo.{$this->FormName()}.settings"); 
-        $new_billing = isset($data['NewBilling']) ? $data['NewBilling'] : false;
-        $same_shipping = isset($data['DuplicateDelivery']) ? $data['DuplicateDelivery'] : 1;
-        $new_shipping = isset($data['NewShipping']) ? $data['NewShipping'] : false;
 
-        $billing_fields = $this->getBillingFields($data);
-        $delivery_fields = $this->getDeliveryFields($data);
-
-        if ($billing_fields) {
-            $fields->add($billing_fields);
+        $new_billing = false;
+        $same_shipping = 1;
+        $new_shipping = false;
+        
+        if (isset($data['NewBilling'])) {
+            $new_billing = $data['NewBilling'];
+        }
+        
+        if(isset($data['DuplicateDelivery'])) {
+            $same_shipping = $data['DuplicateDelivery'];
         }
 
-        if ($delivery_fields) {
-            $fields->add($delivery_fields);
+        if (isset($data['NewShipping'])) {
+            $new_shipping = $data['NewShipping'];
+        }
+
+        // Setup billing fields
+        if (!$new_billing && $contact && $contact->Locations()->exists()) {
+            $fields->merge($this->getBillingDropdownFields());
+        } else {
+            $fields->merge($this->getBillingFields());
         }
 
         // If cart is deliverable, add shipping detail fields
         if (!$estimate->isCollection() && $estimate->isDeliverable()) {
-            $fields->add(
+            if (!$new_shipping && $contact && $contact->Locations()->count() > 1) {
+                $fields->merge($this->getDeliveryDropdownFields());
+            } else {
+                $fields->merge($this->getDeliveryFields());
+            }
+
+            $fields->push(
                 CheckboxField::create(
                     'DuplicateDelivery',
-                    _t('Checkout.DeliverHere', 'Deliver to this address?')
+                    _t('SilverCommerce\Checkout.DeliverHere', 'Deliver to this address?')
                 )->setValue($same_shipping)
             );
         }
@@ -113,9 +128,9 @@ class CustomerDetailsForm extends Form
         // If we have turned off login, or member logged in
         if ($config->CheckoutLoginForm && !$member) {
             if ($config->CheckoutAllowGuest == true) {
-                $register_title = _t('Checkout.CreateAccountOptional', 'Create Account (Optional)');
+                $register_title = _t('SilverCommerce\Checkout.CreateAccountOptional', 'Create Account (Optional)');
             } else {
-                $register_title = _t('Checkout.CreateAccountRequired', 'Create Account (Required)');                
+                $register_title = _t('SilverCommerce\Checkout.CreateAccountRequired', 'Create Account (Required)');                
             }
 
             $fields->add(
@@ -142,7 +157,7 @@ class CustomerDetailsForm extends Form
             FieldList::create(
                 FormAction::create(
                     'doContinue',
-                    _t('Checkout.Continue', 'Continue')
+                    _t('SilverCommerce\Checkout.Continue', 'Continue')
                 )->addExtraClass('checkout-action-next')
             ),
             $this->getRequiredFields($data)
@@ -157,196 +172,262 @@ class CustomerDetailsForm extends Form
         }
     }
 
-    public function getBillingFields($data)
+    /**
+     * Generate a FieldList of billing address fields
+     * 
+     * @return FieldList
+     */
+    public function getBillingFields()
     {
         $contact = $this->getContact();
-        $return = null;
 
-        if (is_array($data) && isset($data['NewBilling'])) {
-            $new_billing = $data['NewBilling'];
-        } else {
-            $new_billing = false;
-        }
+        $fields = FieldList::create(
+            CompositeField::create(
 
-        // Is user logged in and has saved addresses
-        if (!$new_billing && $contact && $contact->Locations()->exists()) {
-            // Generate saved address dropdown
-            $return = CompositeField::create(
-                DropdownField::create(
-                    'BillingAddress',
-                    _t('Checkout.BillingAddress','Billing Address'),
-                    $contact->Locations()
-                ),
-                FormAction::create(
-                    'doAddNewBilling',
-                    _t('Checkout.NewAddress', 'Use different address')
-                )->addextraClass('btn btn-primary')
-                ->setAttribute('formnovalidate',true)                
-            )->setName('SavedBilling');
-        } else {
-            $return = CompositeField::create(
                 // Personal details fields
                 CompositeField::create(
                     TextField::create(
                         'FirstName',
-                        _t('Checkout.FirstName', 'First Name(s)')
+                        _t('SilverCommerce\Checkout.FirstName', 'First Name(s)')
                     ),
                     TextField::create(
                         'Surname',
-                        _t('Checkout.Surname', 'Surname')
+                        _t('SilverCommerce\Checkout.Surname', 'Surname')
                     ),
                     TextField::create(
                         "Company",
-                        _t('Checkout.Company', "Company")
-                    )->setRightTitle(_t("Checkout.Optional", "Optional")),
+                        _t('SilverCommerce\Checkout.Company', "Company")
+                    )->setRightTitle(_t(
+                        "SilverCommerce\Checkout.Optional",
+                        "Optional"
+                    )),
                     EmailField::create(
                         'Email',
-                        _t('Checkout.Email', 'Email')
+                        _t('SilverCommerce\Checkout.Email', 'Email')
                     ),
                     TextField::create(
                         'PhoneNumber',
-                        _t('Checkout.Phone', 'Phone Number')
+                        _t('SilverCommerce\Checkout.Phone', 'Phone Number')
                     )
                 )->setName("PersonalFields"),
 
                 // Address details fields
-                CompositeField::create(
+                $address_fields = CompositeField::create(
                     TextField::create(
                         'Address1',
-                        _t('Checkout.Address1', 'Address Line 1')
+                        _t('SilverCommerce\Checkout.Address1', 'Address Line 1')
                     ),
                     TextField::create(
                         'Address2',
-                        _t('Checkout.Address2', 'Address Line 2')
-                    )->setRightTitle(_t("Checkout.Optional", "Optional")),
+                        _t('SilverCommerce\Checkout.Address2', 'Address Line 2')
+                    )->setRightTitle(_t(
+                        "SilverCommerce\Checkout.Optional",
+                        "Optional"
+                    )),
                     TextField::create(
                         'City',
-                        _t('Checkout.City', 'City')
-                    ),
-                    TextField::create(
-                        'State',
-                        _t('Checkout.StateCounty', 'State/County')
-                    ),
-                    TextField::create(
-                        'PostCode',
-                        _t('Checkout.PostCode', 'Post Code')
+                        _t('SilverCommerce\Checkout.City', 'City')
                     ),
                     DropdownField::create(
                         'Country',
-                        _t('Checkout.Country', 'Country'),
-                        i18n::getData()->getCountries()
-                    )->setEmptyString("")
+                        _t('SilverCommerce\Checkout.Country', 'Country'),
+                        array_change_key_case(
+                            i18n::getData()->getCountries(),
+                            CASE_UPPER
+                        ),
+                        strtoupper(Locale::getRegion(i18n::get_locale()))
+                    ),
+                    RegionSelectionField::create(
+                        "County",
+                        _t('SilverCommerce\Checkout.Region', "County/State"),
+                        "Country"
+                    ),
+                    TextField::create(
+                        'PostCode',
+                        _t('SilverCommerce\Checkout.PostCode', 'Post Code')
+                    )
                 )->setName("AddressFields")
             )->setName("BillingFields")
-            ->setColumnCount(2);
+            ->setColumnCount(2)
+        );
 
-            // Add a save address for later checkbox if a user is logged in
-            if (!empty($contact)) {
-                $return->push(CompositeField::create(
-                    CheckboxField::create(
-                        "SaveBillingAddress",
-                        _t('Checkout.SaveBillingAddress', 'Save this address for later')
-                    ))->setName("SaveBillingAddressHolder")
-                );
+        // Add a save address for later checkbox if a user is logged in
+        if (!empty($contact)) {
+            $address_fields->push(CheckboxField::create(
+                "SaveBillingAddress",
+                _t('SilverCommerce\Checkout.SaveAddress', 'Save Address')
+            ));
 
-                if ($contact && $contact->Locations()->exists()) {
-                    $return->push(
-                        FormAction::create(
-                            'doUseSavedBilling',
-                            _t('Checkout.SavedAddress', 'Use saved address')
-                        )->addextraClass('btn btn-link')
-                        ->setAttribute('formnovalidate',true)
-                    );
-                }
+            if ($contact && $contact->Locations()->exists()) {
+                $address_fields->push(FormAction::create(
+                    'doUseSavedBilling',
+                    _t(
+                        'SilverCommerce\Checkout.UseSavedAddress',
+                        'Use Saved Address'
+                    )
+                )->addextraClass('btn btn-link')
+                ->setAttribute('formnovalidate',true));
             }
         }
 
-        return $return;
+        return $fields;
     }
 
-    public function getDeliveryFields($data)
+    /**
+     * Generate a FieldList of billing fields if the user has saved addresses
+     * 
+     * @return FieldList
+     */
+    public function getBillingDropdownFields()
     {
-        $member = Security::getCurrentUser();
         $contact = $this->getContact();
-        $estimate = $this->getEstimate();
-        $return = null;
 
-        if (is_array($data) && isset($data['NewShipping'])) {
-            $new_shipping = $data['NewShipping'];
-        } else {
-            $new_shipping = false;
+        return FieldList::create(
+            CompositeField::create(
+                DropdownField::create(
+                    'BillingAddress',
+                    _t(
+                        'SilverCommerce\Checkout.BillingAddress',
+                        'Billing Address'
+                    ),
+                    $contact->Locations()
+                ),
+                FormAction::create(
+                    'doAddNewBilling',
+                    _t(
+                        'SilverCommerce\Checkout.NewAddress',
+                        'Use different address'
+                    )
+                )->addextraClass('btn btn-link')
+                ->setAttribute('formnovalidate',true)
+            )->setName("BillingFields")
+        );
+    }
+
+    /**
+     * Generate a FieldList of delivery address fields
+     * 
+     * @return FieldList
+     */
+    public function getDeliveryFields()
+    {
+        $contact = $this->getContact();
+
+        $fields = FieldList::create(
+            CompositeField::create(
+                CompositeField::create(
+                    TextField::create(
+                        'DeliveryCompany',
+                        _t('SilverCommerce\Checkout.Company', 'Company')
+                    )->setRightTitle(_t(
+                        "SilverCommerce\Checkout.Optional",
+                        "Optional"
+                    )),
+                    TextField::create(
+                        'DeliveryFirstName',
+                        _t('SilverCommerce\Checkout.FirstName', 'First Name(s)')
+                    ),
+                    TextField::create(
+                        'DeliverySurname',
+                        _t('SilverCommerce\Checkout.Surname', 'Surname')
+                    )
+                )->setName("PersonalFields"),
+
+                $address_fields = CompositeField::create(
+                    TextField::create(
+                        'DeliveryAddress1',
+                        _t('SilverCommerce\Checkout.Address1', 'Address Line 1')
+                    ),
+                    TextField::create(
+                        'DeliveryAddress2',
+                        _t('SilverCommerce\Checkout.Address2', 'Address Line 2')
+                    )->setRightTitle(_t("SilverCommerce\Checkout.Optional", "Optional")),
+                    TextField::create(
+                        'DeliveryCity',
+                        _t('SilverCommerce\Checkout.City', 'City')
+                    ),
+                    DropdownField::create(
+                        'DeliveryCountry',
+                        _t('SilverCommerce\Checkout.Country', 'Country'),
+                        array_change_key_case(
+                            i18n::getData()->getCountries(),
+                            CASE_UPPER
+                        ),
+                        strtoupper(Locale::getRegion(i18n::get_locale()))
+                    ),
+                    RegionSelectionField::create(
+                        "DeliveryCounty",
+                        _t('SilverCommerce\Checkout.Region', "County/State"),
+                        "DeliveryCountry"
+                    ),
+                    TextField::create(
+                        'DeliveryPostCode',
+                        _t('SilverCommerce\Checkout.PostCode', 'Post Code')
+                    )
+                )->setName("AddressFields")
+            )->setName("DeliveryFields")
+            ->setColumnCount(2)
+        );
+
+        // Add a save address for later checkbox if a user is logged in
+        if ($contact) {
+            $address_fields->push(CheckboxField::create(
+                "SaveShippingAddress",
+                _t('SilverCommerce\Checkout.SaveAddress', 'Save Address')
+            ));
         }
 
-        // If cart is for collection, or not deliverable, add no fields
-        if ($estimate->isCollection() || !$estimate->isDeliverable()) {
-            return;
+        if ($contact && $contact->Locations()->count() > 1) {
+            $address_fields->push(FormAction::create(
+                'doUseSavedShipping',
+                _t(
+                    'SilverCommerce\Checkout.UseSavedAddress',
+                    'Use Saved Address'
+                )
+            )->addextraClass('btn btn-link')
+            ->setAttribute('formnovalidate',true));
         }
 
-        if (!$new_shipping && $contact && $contact->Locations()->count() > 1) {
-            $return = CompositeField::create(
+        return $fields;
+    }
+
+    /**
+     * Generate a FieldList containing fields for if the user
+     * has existing locations
+     * 
+     * @return FieldList
+     */
+    public function getDeliveryDropdownFields()
+    {
+        $contact = $this->getContact();
+
+        return FieldList::create(
+            CompositeField::create(
                 DropdownField::create(
                     'ShippingAddress',
-                    _t('Checkout.ShippingAddress','Shipping Address'),
+                    _t(
+                        'SilverCommerce\Checkout.DeliveryAddress',
+                        'Delivery Address'
+                    ),
                     $contact->Locations()
                 ),
                 FormAction::create(
                     'doAddNewShipping',
-                    _t('Checkout.NewAddress', 'Use different address')
-                )->addextraClass('btn btn-primary')
+                    _t(
+                        'SilverCommerce\Checkout.UseDifferentAddress',
+                        'Use Different Address'
+                    )
+                )->addextraClass('btn btn-link')
                 ->setAttribute('formnovalidate',true)
-            )->setName('SavedShipping');
-        } else {
-            $return = CompositeField::create(
-                CompositeField::create(
-                    TextField::create('DeliveryCompany', _t('Checkout.Company', 'Company'))
-                        ->setRightTitle(_t("Checkout.Optional", "Optional")),
-                    TextField::create('DeliveryFirstName', _t('Checkout.FirstName', 'First Name(s)')),
-                    TextField::create('DeliverySurname', _t('Checkout.Surname', 'Surname'))
-                )->setName("PersonalFields"),
-                $address_fields = CompositeField::create(
-                    TextField::create('DeliveryAddress1', _t('Checkout.Address1', 'Address Line 1')),
-                    TextField::create('DeliveryAddress2', _t('Checkout.Address2', 'Address Line 2'))
-                        ->setRightTitle(_t("Checkout.Optional", "Optional")),
-                    TextField::create('DeliveryCity', _t('Checkout.City', 'City')),
-                    TextField::create('DeliveryState', _t('Checkout.StateCounty', 'State/County')),
-                    TextField::create('DeliveryPostCode', _t('Checkout.PostCode', 'Post Code')),
-                    DropdownField::create(
-                        'DeliveryCountry',
-                        _t('Checkout.Country', 'Country'),
-                        i18n::getData()->getCountries()
-                    )->setEmptyString("")
-                )->setName("AddressFields")
             )->setName("DeliveryFields")
-            ->setColumnCount(2);
-
-            if ($contact && $contact->Locations()->exists()) {
-                $address_fields->push(
-                    FormAction::create(
-                        'doUseSavedShipping',
-                        _t('Checkout.SavedAddress', 'Use saved address')
-                    )->addextraClass('btn btn-primary')
-                    ->setAttribute('formnovalidate',true)
-                );
-            }
-
-            // Add a save address for later checkbox if a user is logged in
-            if ($member) {
-                $address_fields->push(CheckboxField::create(
-                    "SaveShippingAddress",
-                    _t('Checkout.SaveShippingAddress', 'Save this address for later')
-                ));
-            }
-        }
-
-        return $return;
+        );
     }
 
     public function getRequiredFields($data)
     {
         $contact = $this->getContact();
         $estimate = $this->getEstimate();
-        $config = SiteConfig::current_site_config();
-        $return = new CheckoutValidator();
+        $deliverable = true;
 
         if (is_array($data) && isset($data['NewBilling'])) {
             $new_billing = $data['NewBilling'];
@@ -354,44 +435,19 @@ class CustomerDetailsForm extends Form
             $new_billing = false;
         }
 
-        if (is_array($data) && isset($data['NewShipping'])) {
-            $new_shipping = $data['NewShipping'];
+        if ($new_billing || !$contact || ($contact && !$contact->Locations()->exists())) {
+            $billing_dropdown = false;
         } else {
-            $new_shipping = false;
+            $billing_dropdown = true;
+        }
+        
+        if ($estimate->isCollection() || !$estimate->isDeliverable()) {
+            $deliverable = false;
         }
 
-        if ($config->CheckoutAllowGuest == false) {
-            $return->addRequiredField('Password');
-        }
-
-        if ($new_billing || !$contact || ($contact && $contact->Locations()->exists())) {
-            $return->appendRequiredFields(new RequiredFields(
-                'FirstName',
-                'Surname',
-                'Address1',
-                'City',
-                'PostCode',
-                'Country',
-                'Email',
-                'PhoneNumber'
-            ));
-
-            if (!$estimate->isCollection() && $estimate->isDeliverable()) {
-                $return->appendRequiredFields(new RequiredFields(
-                    'DeliveryFirstName',
-                    'DeliverySurname',
-                    'DeliveryAddress1',
-                    'DeliveryCity',
-                    'DeliveryPostCode',
-                    'DeliveryCountry'
-                ));
-            }
-        }
-
-        return $return;
+        return CheckoutValidator::create($deliverable, $billing_dropdown);
     }
 
-    /** ## Form Processing ## **/
     public function doAddNewBilling($data) 
     {
         $data['NewBilling'] = true;
@@ -425,7 +481,7 @@ class CustomerDetailsForm extends Form
         $session = $this->getSession();
         $session->set("FormInfo.{$this->FormName()}.settings", $data);
         
-        return $this->getController()->redirectBack();        
+        return $this->getController()->redirectBack();
     }
 
     /**
@@ -442,11 +498,27 @@ class CustomerDetailsForm extends Form
         $config = SiteConfig::config();
         $estimate = $this->getEstimate();
         $session = $this->getSession();
-        
+
+        $invalid_keys = [
+            "ID",
+            "ClassName",
+            "RecordClassName",
+            "LastEdited",
+            "Created",
+            "ContactID"
+        ];
+
+        // If we are using a saved address, push to estimate
         if (!isset($data['Address1']) && isset($data['BillingAddress'])) {
-            $billing_address = ContactLocation::get()->byID($data['BillingAddress']);
-            foreach ($billing_address->toMap() as $key => $value) {
-                $data[$key] = $value;
+            $billing_address = ContactLocation::get()
+                ->byID($data['BillingAddress']);
+
+            if (isset($billing_address)) {
+                foreach ($billing_address->toMap() as $key => $value) {
+                    if (!in_array($key, $invalid_keys)) {
+                        $estimate->{$key} = $value;
+                    }
+                }
             }
         }
 
@@ -464,9 +536,16 @@ class CustomerDetailsForm extends Form
                 }
             }
         } elseif (!isset($data['DeliveryAddress1']) && isset($data['ShippingAddress'])) {
-            $shipping_address = ContactLocation::get()->byID($data['ShippingAddress']);
-            foreach ($shipping_address as $key => $value) {
-                $data['Delivery'.$key] = $value;
+            $delivery_address = ContactLocation::get()
+                ->byID($data['ShippingAddress']);
+
+            if (isset($delivery_address)) {
+                foreach ($delivery_address->toMap() as $key => $value) {
+                    if (!in_array($key, $invalid_keys)) {
+                        $key = "Delivery" . $key;
+                        $estimate->{$key} = $value;
+                    }
+                }
             }
         }
 
@@ -501,12 +580,14 @@ class CustomerDetailsForm extends Form
 
         $estimate->write();
 
+        $session->clear("FormInfo.{$this->FormName()}.settings");
+
         $url = $this
-            ->controller
+            ->getController()
             ->Link("postage");
 
         return $this
-            ->controller
+            ->getController()
             ->redirect($url);
     }
 
@@ -525,6 +606,8 @@ class CustomerDetailsForm extends Form
 
             $reg_con = Injector::inst()
                 ->get(RegisterController::class);
+            
+            $reg_con->setRequest($this->getController()->getRequest());
 
             $reg_con
                 ->doRegister($data,$this);
@@ -623,7 +706,7 @@ class CustomerDetailsForm extends Form
             $address->Address2 = $data['DeliveryAddress2'];
             $address->City = $data['DeliveryCity'];
             $address->PostCode = $data['DeliveryPostCode'];
-            $address->State = $data['DeliveryState'];
+            $address->County = $data['DeliveryCounty'];
             $address->Country = $data['DeliveryCountry'];
             $address->ContactID = $contact->ID;
             $address->write();
