@@ -1,6 +1,6 @@
 {
     "name": "silvercommerce/checkout",
-    "description": "Add's a 'checkout' to a SilverStripe site which links to an Estimate and adds the ability to setup and pay for this estimate (converting ti to an order)",
+    "description": "Adds a 'checkout' to a SilverStripe site which links to an Estimate and adds the ability to setup and pay",
       "type": "silverstripe-vendormodule",
       "homepage": "http://github.com/silvercommerce/checkout",
       "keywords": [
@@ -8,7 +8,7 @@
           "commerce",
           "ecommerce",
           "checkout",
-          "shop"
+          "payments"
       ],
       "license": "BSD-3-Clause",
       "authors": [
@@ -29,16 +29,21 @@
           "silverstripe/silverstripe-omnipay": "dev-master",
           "silvercommerce/settings": "~1.0",
           "silvercommerce/orders-admin": "1.*@dev",
+          "silvercommerce/contact-admin": "~1.0",
           "silvercommerce/postage": "~1.0"
       },
       "suggest": {
           "silverstripe/cms": "Add full content management support to your site",
-          "i-lateral/silverstripe-users": "Add user account management, login and registration"
+          "i-lateral/silverstripe-users": "Add user account management and registration"
       },
       "extra": {
           "expose": [
               "client/dist"
           ]
+      },
+      "scripts": {
+          "lint": "phpcs -s src/ tests/",
+          "lint-clean": "phpcbf src/ tests/"
       },
       "autoload": {
           "psr-4": {
