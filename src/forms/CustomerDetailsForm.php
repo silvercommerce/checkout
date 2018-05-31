@@ -126,7 +126,7 @@ class CustomerDetailsForm extends Form
         }
 
         // If we have turned off login, or member logged in
-        if ($config->CheckoutLoginForm && !$member) {
+        if (($config->CheckoutLoginForm || !$config->CheckoutAllowGuest) && !$member) {
             if ($config->CheckoutAllowGuest == true) {
                 $register_title = _t('SilverCommerce\Checkout.CreateAccountOptional', 'Create Account (Optional)');
             } else {
@@ -145,7 +145,7 @@ class CustomerDetailsForm extends Form
                 )->setName("PasswordFields")
             );
 
-            if ($config->CheckoutLoginForm && !$member) {
+            if ($config->CheckoutLoginForm && !$member && $config->CheckoutAllowGuest) {
                 $pw_field->setCanBeEmpty(true);
             }
         }

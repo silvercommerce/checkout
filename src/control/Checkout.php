@@ -296,7 +296,7 @@ class Checkout extends Controller
         $config = SiteConfig::current_site_config();
         $member = Security::getCurrentUser();
 
-        if (!$member && $config->CheckoutLoginForm) {
+        if (!$member && ($config->CheckoutLoginForm || !$config->CheckoutAllowGuest)) {
             try {
                 $security = Injector::inst()->get(Security::class);
                 $link = $security->Link('login');
