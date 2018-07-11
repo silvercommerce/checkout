@@ -11,6 +11,7 @@ SilverStripe\SiteConfig\SiteConfig:
 SilverCommerce\OrdersAdmin\Model\Invoice:
   extensions:
     - SilverStripe\Omnipay\Extensions\Payable
+    - SilverCommerce\Checkout\Extensions\InvoiceExtension
 SilverStripe\Omnipay\Model\Payment:
   extensions:
     - SilverCommerce\Checkout\Extensions\PaymentExtension
