@@ -57,7 +57,7 @@
                 
                 <div class="unit-75 col-sm-8 text-right">
                     <% loop $Actions %>
-                        <% if $Up.Estimate.isCollection && $Name == "action_doSetDelivery" %>
+                        <% if not $Up.Estimate.isDeliverable && $Name == "action_doSetDelivery" %>
                             $addExtraClass("btn btn-green btn-success").Field
                         <% else_if $Name == "action_doContinue" %>
                             $addExtraClass("btn btn-green btn-success").Field

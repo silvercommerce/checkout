@@ -28,23 +28,19 @@
 
                     <% if $isDeliverable %>                    
                         <h3><%t Checkout.DeliveryDetails "Delivery Details" %></h3>
-                        <% if $isCollection %>
-                            <p><%t Checkout.ItemsReservedInstore "Your items will be held instore until you collect them" %></p>
-                        <% else %>
-                            <p>
-                                <% if $DeliveryCompany %>
-                                    <strong><%t Checkout.Company "Company" %>:</strong> $DeliveryCompany<br/>
-                                <% end_if %>
-                                <strong><%t Checkout.Name "Name" %>:</strong> $DeliveryFirstName $DeliverySurname<br/>
-                                <strong><%t Checkout.Address "Address" %>:</strong><br/>
-                                $DeliveryAddress1<br/>
-                                <% if $DeliveryAddress2 %>$DeliveryAddress2<br/><% end_if %>
-                                $DeliveryCity<br/>
-                                <% if $DeliveryState %>$DeliveryState<br/><% end_if %>
-                                <strong><%t Checkout.PostCode "Post Code" %>:</strong> $DeliveryPostCode<br/>
-                                <strong><%t Checkout.Country "Country" %>:</strong> <% if $DeliveryCountryFull %>$DeliveryCountryFull<% else %>$DeliveryCountry<% end_if %>
-                            </p>
-                        <% end_if %>
+                        <p>
+                            <% if $DeliveryCompany %>
+                                <strong><%t Checkout.Company "Company" %>:</strong> $DeliveryCompany<br/>
+                            <% end_if %>
+                            <strong><%t Checkout.Name "Name" %>:</strong> $DeliveryFirstName $DeliverySurname<br/>
+                            <strong><%t Checkout.Address "Address" %>:</strong><br/>
+                            $DeliveryAddress1<br/>
+                            <% if $DeliveryAddress2 %>$DeliveryAddress2<br/><% end_if %>
+                            $DeliveryCity<br/>
+                            <% if $DeliveryState %>$DeliveryState<br/><% end_if %>
+                            <strong><%t Checkout.PostCode "Post Code" %>:</strong> $DeliveryPostCode<br/>
+                            <strong><%t Checkout.Country "Country" %>:</strong> <% if $DeliveryCountryFull %>$DeliveryCountryFull<% else %>$DeliveryCountry<% end_if %>
+                        </p>
                     <% end_if %>
                 </div>
         <% end_with %>

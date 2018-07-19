@@ -381,7 +381,7 @@ class Checkout extends Controller
             return $this->redirect($this->Link());
         }
 
-        if ($estimate->isCollection() || !$estimate->isDeliverable()) {
+        if (!$estimate->isDeliverable()) {
             return $this->redirect($this->Link('payment'));
         }
 

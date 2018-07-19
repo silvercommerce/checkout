@@ -110,7 +110,7 @@ class CustomerDetailsForm extends Form
         }
 
         // If cart is deliverable, add shipping detail fields
-        if (!$estimate->isCollection() && $estimate->isDeliverable()) {
+        if ($estimate->isDeliverable()) {
             if (!$new_shipping && $contact && $contact->Locations()->count() > 1) {
                 $fields->merge($this->getDeliveryDropdownFields());
             } else {
@@ -441,9 +441,7 @@ class CustomerDetailsForm extends Form
             $billing_dropdown = true;
         }
         
-        if ($estimate->isCollection() || !$estimate->isDeliverable()) {
-            $deliverable = false;
-        }
+        $deliverable = $estimate->isDeliverable();
 
         return CheckoutValidator::create($deliverable, $billing_dropdown);
     }
