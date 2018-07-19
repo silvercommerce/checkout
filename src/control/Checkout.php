@@ -674,7 +674,7 @@ class Checkout extends Controller
             ))
         );
 
-        $this->extend("updatePaymentForm", $form);
+        $this->extend("updateGatewayForm", $form);
 
         return $form;
     }
