@@ -269,7 +269,7 @@ class Checkout extends Controller
     {
         parent::init();
 
-        # Check for subsites and add support
+        // Check for subsites and add support
         if (class_exists(Subsite::class)) {
             $subsite = Subsite::currentSubsite();
 
