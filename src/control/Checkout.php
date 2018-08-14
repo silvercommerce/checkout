@@ -30,7 +30,7 @@ use SilverStripe\Security\MemberAuthenticator;
 use SilverCommerce\TaxAdmin\Helpers\MathsHelper;
 use SilverStripe\Omnipay\Service\ServiceFactory;
 use SilverStripe\CMS\Controllers\ContentController;
-use SilverCommerce\ShoppingCart\Control\ShoppingCart;
+use SilverCommerce\ShoppingCart\ShoppingCartFactory;
 use SilverCommerce\Checkout\Forms\CustomerDetailsForm;
 
 /**
@@ -352,10 +352,9 @@ class Checkout extends Controller
         // If we have just logged in, and we came from the
         // shopping cart, merge defined estimate with the
         // logged in users estimate
-        if (class_exists(ShoppingCart::class) && $member) {
+        if (class_exists(ShoppingCartFactory::class) && $member) {
             $estimate = $this->getEstimate();
-            $shopping_cart = ShoppingCart::get();
-            $cart_estimate = $shopping_cart->getEstimate();
+            $cart_estimate = ShoppingCartFactory::create()->getCurrent();
 
             if (!$estimate || ($cart_estimate->ID != $estimate->ID)) {
                 $this->setEstimate($cart_estimate);
@@ -507,9 +506,8 @@ class Checkout extends Controller
         }
 
         // If we are using the shopping cart, clear that as well
-        if (class_exists(ShoppingCart::class)) {
-            Cookie::force_expiry('ShoppingCart.EstimateID');
-            Cookie::force_expiry('ShoppingCart_EstimateID');
+        if (class_exists(ShoppingCartFactory::class)) {
+            ShoppingCartFactory::create()->delete();
         }
 
         return $this->render();
@@ -525,8 +523,8 @@ class Checkout extends Controller
     {
         // If the shoppingcart module is installed we should
         // redirect to it when estimate is lost.
-        if (class_exists(ShoppingCart::class)) {
-            $shopping_cart = ShoppingCart::get();
+        if (class_exists(ShoppingCartFactory::class)) {
+            $shopping_cart = ShoppingCartFactory::create()->getCurrent();
             return $this->redirect($shopping_cart->Link());
         }
 
