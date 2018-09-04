@@ -32,8 +32,8 @@ class PaymentExtension extends DataExtension
         $order = $this->owner->Invoice();
 
         if ($order->exists()) {
-            $payment_amount = MathsHelper::round_up($this->owner->getAmount(), 2);
-            $order_amount = MathsHelper::round_up($order->Total, 2);
+            $payment_amount = MathsHelper::round($this->owner->getAmount(), 2);
+            $order_amount = MathsHelper::round($order->Total, 2);
 
             // If our payment is the value of the order, mark paid
             // else mark part paid

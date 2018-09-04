@@ -781,7 +781,7 @@ class Checkout extends Controller
         $payment = Payment::create()
             ->init(
                 $this->getPaymentMethod(),
-                MathsHelper::round_up($order->Total, 2),
+                MathsHelper::round($order->Total, 2),
                 $currency_code
             )->setSuccessUrl($this->AbsoluteLink('complete'))
             ->setFailureUrl(Controller::join_links(
