@@ -443,7 +443,7 @@ class Checkout extends Controller
         // Check if payment ID set and corresponds
         try {
             // Get an order by converting the estimate
-            $order = $estimate->convertToInvoice();
+            $order = $estimate;
             $gateway_form = $this->GatewayForm();
             $payment_form = $this->PaymentForm();
 
@@ -752,6 +752,8 @@ class Checkout extends Controller
             ->getSession();
         
         $order = $this->getEstimate();
+        $order = $order->convertToInvoice();
+
         $config = SiteConfig::current_site_config();
 
         // Get thre digit currency code
