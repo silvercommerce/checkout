@@ -427,7 +427,6 @@ class Checkout extends Controller
         }
 
         $estimate = $this->getEstimate();
-        $order = null;
 
         // If estimate does not have a shipping address, restart checkout 
         if (empty(trim($estimate->BillingAddress))) {
@@ -442,8 +441,6 @@ class Checkout extends Controller
 
         // Check if payment ID set and corresponds
         try {
-            // Get an order by converting the estimate
-            $order = $estimate;
             $gateway_form = $this->GatewayForm();
             $payment_form = $this->PaymentForm();
 
@@ -757,21 +754,25 @@ class Checkout extends Controller
         $config = SiteConfig::current_site_config();
 
         // Get thre digit currency code
-        $number_format = new NumberFormatter($config->SiteLocale, NumberFormatter::CURRENCY);
-        $currency_code = $number_format->getTextAttribute(NumberFormatter::CURRENCY_CODE);
+        $number_format = new NumberFormatter(
+            $config->SiteLocale,
+            NumberFormatter::CURRENCY
+        );
+        $currency_code = $number_format
+            ->getTextAttribute(NumberFormatter::CURRENCY_CODE);
         
         // Map our order data to an array to omnipay
         $omnipay_data = [];
         $omnipay_map = $this->config()->omnipay_map;
         
-        foreach ($order as $key => $value) {
+        foreach ($order->toMap() as $key => $value) {
             if (array_key_exists($key, $omnipay_map)) {
                 $omnipay_data[$omnipay_map[$key]] = $value;
             }
         }
         
         $omnipay_data = array_merge($omnipay_data, $data);
-        
+
         // Set a description for this payment
         $omnipay_data["description"] = _t(
             "Order.PaymentDescription",
