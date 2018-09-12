@@ -126,7 +126,7 @@ class Checkout extends Controller
      * @config
      */
     private static $omnipay_map = [
-        "Number" => "transactionId",
+        "FullRef" => "transactionId",
         "FirstName" => "firstName",
         "Surname" => "lastName",
         "Email" => "email",
@@ -777,7 +777,7 @@ class Checkout extends Controller
         $omnipay_data["description"] = _t(
             "Order.PaymentDescription",
             "Payment for Order: {ordernumber}",
-            ['ordernumber' => $order->Number]
+            ['ordernumber' => $order->FullRef]
         );
 
         // Create the payment object. We pass the desired success and failure URLs as parameter to the payment
