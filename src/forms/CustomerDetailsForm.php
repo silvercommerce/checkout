@@ -94,7 +94,7 @@ class CustomerDetailsForm extends Form
             $new_billing = $data['NewBilling'];
         }
         
-        if(isset($data['DuplicateDelivery'])) {
+        if (isset($data['DuplicateDelivery'])) {
             $same_shipping = $data['DuplicateDelivery'];
         }
 
@@ -541,6 +541,7 @@ class CustomerDetailsForm extends Form
             }
         }
 
+        // If the user is selected 
         if (!$member && isset($data['Password']) && isset($data['Password']["_Password"])  && !empty($data['Password']["_Password"])) {
             $member = $this->registerUser($data);
 
@@ -583,46 +584,40 @@ class CustomerDetailsForm extends Form
             ->redirect($url);
     }
 
+    /**
+     * Register an existing user with the system and return (or return false on failier)
+     * 
+     * @return Member|null
+     */
     public function registerUser($data)
     {
         $session = $this->getSession();
 
-        // If we have the users module installed, tap into its
-        // registration process, else use the built in process.
-        if (class_exists(RegisterController::class)) {
-            $url = $this
-                ->getController()
-                ->Link("finish");
-            
-            $session->set('BackURL',$url);
-
-            $reg_con = Injector::inst()
-                ->get(RegisterController::class);
-            
-            $reg_con->setRequest($this->getController()->getRequest());
-
-            $reg_con
-                ->doRegister($data,$this);
-            return false;
-        } else {
-            $member = Member::get()
+        $member = Member::get()
                 ->filter("Email", $data["Email"])
                 ->first();
 
-            // Check if a user already exists
-            if ($member) {
-                $this->sessionMessage(
-                    "Sorry, an account already exists with those details.",
-                    "bad"
-                );
+        // Check if a user already exists
+        if ($member) {
+            $this->sessionMessage(
+                "Sorry, an account already exists with those details.",
+                "bad"
+            );
 
-                // Load errors into session and post back
-                $session->set("Form.{$this->FormName()}.data", $data);
-                $session->set("FormInfo.{$this->FormName()}.settings", $data);
-                return false;
-            }
+            // Load errors into session and post back
+            $session->set("Form.{$this->FormName()}.data", $data);
+            $session->set("FormInfo.{$this->FormName()}.settings", $data);
+            return false;
+        }
 
-            $member = Member::create();
+        $member = Member::create();
+
+        // If we have the users module installed, tap into its
+        // registration process, else use the built in process.
+        if (class_exists(RegisterController::class)) {
+            $member->Register($data);
+            $member->write();
+        } else {
             $this->saveInto($member);
             $member->write();
 
@@ -642,9 +637,13 @@ class CustomerDetailsForm extends Form
                 false,
                 $this->getRequest()
             );
-
-            return $member; 
         }
+    
+        if (!$member) {
+            return false;
+        }
+
+        return $member;
     }
 
     /**
