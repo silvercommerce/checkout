@@ -765,9 +765,9 @@ class Checkout extends Controller
         $omnipay_data = [];
         $omnipay_map = $this->config()->omnipay_map;
         
-        foreach ($order->toMap() as $key => $value) {
-            if (array_key_exists($key, $omnipay_map)) {
-                $omnipay_data[$omnipay_map[$key]] = $value;
+        foreach ($omnipay_map as $inv_key => $op_key) {
+            if (!empty($order->{$inv_key})) {
+                $omnipay_data[$op_key] = $order->{$inv_key};
             }
         }
         
