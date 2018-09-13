@@ -136,7 +136,7 @@ class Checkout extends Controller
         "City" => "billingCity",
         "State" => "billingState",
         "PostCode" => "billingPostcode",
-        "County" => "billingState",
+        "CountryUC" => "billingState",
         "Country" => "billingCountry",
         "PhoneNumber" => "billingPhone",
         "DeliveryAddress1" => "shippingAddress1",
@@ -144,7 +144,7 @@ class Checkout extends Controller
         "DeliveryCity" => "shippingCity",
         "DeliveryCounty" => "shippingState",
         "DeliveryPostCode" => "shippingPostcode",
-        "DeliveryCountry" => "shippingCountry",
+        "DeliveryCountryUC" => "shippingCountry",
         "PhoneNumber" => "shippingPhone"
     ];
 
