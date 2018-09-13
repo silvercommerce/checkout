@@ -346,11 +346,8 @@ class CustomerDetailsForm extends Form
                     DropdownField::create(
                         'DeliveryCountry',
                         _t('SilverCommerce\Checkout.Country', 'Country'),
-                        array_change_key_case(
-                            i18n::getData()->getCountries(),
-                            CASE_UPPER
-                        ),
-                        strtoupper(Locale::getRegion(i18n::get_locale()))
+                        i18n::getData()->getCountries(),
+                        Locale::getRegion(i18n::get_locale())
                     ),
                     RegionSelectionField::create(
                         "DeliveryCounty",
