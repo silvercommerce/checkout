@@ -40,7 +40,8 @@
                     <% end_loop %>
                 </td>
                 <td class="text-right">
-                    $DiscountTotal.Nice<br />
+                    $DiscountTotal.Nice
+                    <br />
                     <% loop $Discounts %>
                         <small class="text-muted">$Value.Nice</small><% if not $Last %><br /><% end_if %>
                     <% end_loop %>
