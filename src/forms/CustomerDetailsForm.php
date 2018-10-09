@@ -524,6 +524,8 @@ class CustomerDetailsForm extends Form
 
                     if (isset($data[$non_del_key]) && !empty($data[$non_del_key])) {
                         $data[$key] = $data[$non_del_key];
+                    } else if (isset($estimate->$non_del_key) && !empty($estimate->$non_del_key)) {
+                        $data[$key] = $estimate->$non_del_key;
                     }
                 }
             }
