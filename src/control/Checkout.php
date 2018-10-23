@@ -713,6 +713,7 @@ class Checkout extends Controller
                     "doSubmitPayment",
                     _t("SilverCommerce\Checkout.PayNow", "Pay Now")
                 )->addExtraClass("btn btn-success btn-block")
+                ->setUseButtonTag(true)
             )
         );
 
