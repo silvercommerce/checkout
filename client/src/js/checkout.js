@@ -112,9 +112,15 @@
                         event.stopPropagation();
                         var invalid = document.querySelectorAll(':invalid');
                         [].forEach.call(invalid, function(e) {
+                            var label = e.parentNode.getElementsByTagName("label")[0];
+                            if (typeof label !== 'undefined') {
+                                var name = label.textContent;
+                            } else {
+                                var name = e.name;
+                            }
                             var para = document.createElement("div");
                             para.classList.add("invalid-feedback");
-                            var node = document.createTextNode('"'+e.previousElementSibling.textContent+'" is required.');
+                            var node = document.createTextNode('"'+name+'" is required.');
                             para.appendChild(node);
                             e.parentNode.appendChild(para);
                         });
