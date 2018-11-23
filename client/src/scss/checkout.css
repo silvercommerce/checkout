@@ -1,0 +1,59 @@
+/* Checkout
+---------------------------------------- */
+.checkout-container {
+  /** Checkout form
+    ------------------------------------ */
+  /* Order Summary
+    ------------------------------------ */
+}
+
+.checkout-container form {
+  width: auto;
+  max-width: none;
+}
+
+.checkout-container .checkout-order-summary table {
+  width: 100%;
+}
+
+.checkout-container .checkout-order-summary .text-right {
+  text-align: right;
+}
+
+.checkout-container .checkout-order-summary .total td {
+  font-size: 2em;
+  color: #b80000;
+  padding-top: 0.5em;
+  padding-bottom: 0.5em;
+}
+
+/* Checkout Login Form
+---------------------------------------- */
+#CheckoutLoginForm_LoginForm {
+  position: relative;
+}
+
+#CheckoutLoginForm_LoginForm:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+#CheckoutLoginForm_LoginForm #CheckoutLoginForm_LoginForm_action_dologin {
+  float: right;
+  margin-left: 3em;
+}
+
+#CheckoutLoginForm_LoginForm #ForgotPassword {
+  float: left;
+  line-height: 2.5em;
+}
+
+@media screen and (max-width: 480px) {
+  #CheckoutLoginForm_LoginForm #CheckoutLoginForm_LoginForm_action_dologin,
+  #CheckoutLoginForm_LoginForm #ForgotPassword {
+    float: left;
+    margin-right: 2em;
+  }
+}
+/*# sourceMappingURL=checkout.css.map */

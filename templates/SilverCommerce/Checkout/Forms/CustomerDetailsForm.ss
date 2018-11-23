@@ -1,5 +1,5 @@
 <% if $IncludeFormTag %>
-<form $addExtraClass('forms').AttributesHTML>
+<form $addExtraClass('forms needs-validation').AttributesHTML novalidate>
 <% end_if %>
 
     <% if $Message %>
