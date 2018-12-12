@@ -519,7 +519,9 @@ class CustomerDetailsForm extends Form
         if (isset($data['DuplicateDelivery']) && $data['DuplicateDelivery'] == 1) {
             // Find any submitted data that is delivery and copy the data from
             // the standard data
-            $data['ShippingAddress'] = $data['BillingAddress'];
+            if (isset($data['BillingAddress'])) {
+                $data['ShippingAddress'] = $data['BillingAddress'];
+            }
             foreach ($data as $key => $value) {
                 if (strpos($key, "Delivery") !== false) {
                     $non_del_key = str_replace("Delivery", "", $key);
