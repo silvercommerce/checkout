@@ -519,6 +519,7 @@ class CustomerDetailsForm extends Form
         if (isset($data['DuplicateDelivery']) && $data['DuplicateDelivery'] == 1) {
             // Find any submitted data that is delivery and copy the data from
             // the standard data
+            $data['ShippingAddress'] = $data['BillingAddress'];
             foreach ($data as $key => $value) {
                 if (strpos($key, "Delivery") !== false) {
                     $non_del_key = str_replace("Delivery", "", $key);
@@ -530,7 +531,9 @@ class CustomerDetailsForm extends Form
                     }
                 }
             }
-        } elseif (!isset($data['DeliveryAddress1']) && isset($data['ShippingAddress'])) {
+        }
+        
+        if (!isset($data['DeliveryAddress1']) && isset($data['ShippingAddress'])) {
             $delivery_address = ContactLocation::get()
                 ->byID($data['ShippingAddress']);
 
