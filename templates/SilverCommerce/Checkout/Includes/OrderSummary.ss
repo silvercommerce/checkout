@@ -4,7 +4,7 @@
     <table class="table width-100">
         <% loop $Items %>
             <tr>
-                <td style="vertical-align: middle;">$Image.CroppedImage(45,45)</div>
+                <td style="vertical-align: middle;"><img src="$Image.Fill(45,45).URL" alt="Image.Title"></div>
                 <td style="vertical-align: middle;">
                     <p>$Quantity x $Title</p>
                 </td>
