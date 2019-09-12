@@ -808,6 +808,8 @@ class Checkout extends Controller
             ->getService($payment, ServiceFactory::INTENT_PAYMENT)
             ->initiate($omnipay_data);
 
+        $this->extend("onBeforeRedirect", $payment, $order, $response);
+
         return $response->redirectOrRespond();
     }
 
