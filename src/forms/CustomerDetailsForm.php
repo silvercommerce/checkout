@@ -42,11 +42,13 @@ class CustomerDetailsForm extends Form
      */
     protected $estimate;
 
-    public function getEstimate() {
+    public function getEstimate()
+    {
         return $this->estimate;
     }
 
-    public function setEstimate(Estimate $estimate) {
+    public function setEstimate(Estimate $estimate)
+    {
         $this->estimate = $estimate;
         return $this;
     }
@@ -58,11 +60,13 @@ class CustomerDetailsForm extends Form
      */
     protected $contact;
 
-    public function getContact() {
+    public function getContact()
+    {
         return $this->contact;
     }
 
-    public function setContact(Contact $contact) {
+    public function setContact(Contact $contact)
+    {
         $this->contact = $contact;
         return $this;
     }
@@ -85,7 +89,7 @@ class CustomerDetailsForm extends Form
         $fields = FieldList::create();
 
         // Set default form parameters
-        $data = $session->get("FormInfo.{$this->FormName()}.settings"); 
+        $data = $session->get("FormInfo.{$this->FormName()}.settings");
 
         $new_billing = false;
         $same_shipping = 1;
@@ -131,7 +135,7 @@ class CustomerDetailsForm extends Form
             if ($config->CheckoutAllowGuest == true) {
                 $register_title = _t('SilverCommerce\Checkout.CreateAccountOptional', 'Create Account (Optional)');
             } else {
-                $register_title = _t('SilverCommerce\Checkout.CreateAccountRequired', 'Create Account (Required)');                
+                $register_title = _t('SilverCommerce\Checkout.CreateAccountRequired', 'Create Account (Required)');
             }
 
             $fields->add(
@@ -142,7 +146,7 @@ class CustomerDetailsForm extends Form
                         3
                     ),
                     $pw_field = ConfirmedPasswordField::create("Password")
-                        ->setAttribute('formnovalidate',true)
+                        ->setAttribute('formnovalidate', true)
                 )->setName("PasswordFields")
             );
 
@@ -153,7 +157,7 @@ class CustomerDetailsForm extends Form
 
         parent::__construct(
             $controller,
-            $name, 
+            $name,
             $fields,
             FieldList::create(
                 FormAction::create(
@@ -175,7 +179,7 @@ class CustomerDetailsForm extends Form
 
     /**
      * Generate a FieldList of billing address fields
-     * 
+     *
      * @return FieldList
      */
     public function getBillingFields()
@@ -211,7 +215,6 @@ class CustomerDetailsForm extends Form
                         _t('SilverCommerce\Checkout.Phone', 'Phone Number')
                     )
                 )->setName("PersonalFields"),
-
                 // Address details fields
                 $address_fields = CompositeField::create(
                     TextField::create(
@@ -264,7 +267,7 @@ class CustomerDetailsForm extends Form
                         'Use Saved Address'
                     )
                 )->addextraClass('btn btn-link')
-                ->setAttribute('formnovalidate',true));
+                ->setAttribute('formnovalidate', true));
             }
         }
 
@@ -273,7 +276,7 @@ class CustomerDetailsForm extends Form
 
     /**
      * Generate a FieldList of billing fields if the user has saved addresses
-     * 
+     *
      * @return FieldList
      */
     public function getBillingDropdownFields()
@@ -297,14 +300,14 @@ class CustomerDetailsForm extends Form
                         'Use different address'
                     )
                 )->addextraClass('btn btn-link')
-                ->setAttribute('formnovalidate',true)
+                ->setAttribute('formnovalidate', true)
             )->setName("BillingFields")
         );
     }
 
     /**
      * Generate a FieldList of delivery address fields
-     * 
+     *
      * @return FieldList
      */
     public function getDeliveryFields()
@@ -330,7 +333,6 @@ class CustomerDetailsForm extends Form
                         _t('SilverCommerce\Checkout.Surname', 'Surname')
                     )
                 )->setName("PersonalFields"),
-
                 $address_fields = CompositeField::create(
                     TextField::create(
                         'DeliveryAddress1',
@@ -380,7 +382,7 @@ class CustomerDetailsForm extends Form
                     'Use Saved Address'
                 )
             )->addextraClass('btn btn-link')
-            ->setAttribute('formnovalidate',true));
+            ->setAttribute('formnovalidate', true));
         }
 
         return $fields;
@@ -389,7 +391,7 @@ class CustomerDetailsForm extends Form
     /**
      * Generate a FieldList containing fields for if the user
      * has existing locations
-     * 
+     *
      * @return FieldList
      */
     public function getDeliveryDropdownFields()
@@ -413,7 +415,7 @@ class CustomerDetailsForm extends Form
                         'Use Different Address'
                     )
                 )->addextraClass('btn btn-link')
-                ->setAttribute('formnovalidate',true)
+                ->setAttribute('formnovalidate', true)
             )->setName("DeliveryFields")
         );
     }
@@ -441,31 +443,31 @@ class CustomerDetailsForm extends Form
         return CheckoutValidator::create($deliverable, $billing_dropdown);
     }
 
-    public function doAddNewBilling($data) 
+    public function doAddNewBilling($data)
     {
         $data['NewBilling'] = true;
-        return $this->doUpdateForm($data);        
+        return $this->doUpdateForm($data);
     }
 
-    public function doAddNewShipping($data) 
+    public function doAddNewShipping($data)
     {
         $data['NewShipping'] = true;
-        return $this->doUpdateForm($data);        
+        return $this->doUpdateForm($data);
     }
 
-    public function doUseSavedBilling($data) 
+    public function doUseSavedBilling($data)
     {
         $data['NewBilling'] = false;
-        return $this->doUpdateForm($data);        
+        return $this->doUpdateForm($data);
     }
 
-    public function doUseSavedShipping($data) 
+    public function doUseSavedShipping($data)
     {
         $data['NewShipping'] = false;
         return $this->doUpdateForm($data);
     }
 
-    public function doUpdateForm($data) 
+    public function doUpdateForm($data)
     {
         if (!isset($data['DuplicateDelivery'])) {
             $data['DuplicateDelivery'] = 0;
@@ -528,7 +530,7 @@ class CustomerDetailsForm extends Form
 
                     if (isset($data[$non_del_key]) && !empty($data[$non_del_key])) {
                         $data[$key] = $data[$non_del_key];
-                    } else if (isset($estimate->$non_del_key) && !empty($estimate->$non_del_key)) {
+                    } elseif (isset($estimate->$non_del_key) && !empty($estimate->$non_del_key)) {
                         $data[$key] = $estimate->$non_del_key;
                     }
                 }
@@ -549,7 +551,7 @@ class CustomerDetailsForm extends Form
             }
         }
 
-        // If the user is selected 
+        // If the user is selected
         if (!$member && isset($data['Password']) && isset($data['Password']["_Password"])  && !empty($data['Password']["_Password"])) {
             $member = $this->registerUser($data);
 
@@ -594,7 +596,7 @@ class CustomerDetailsForm extends Form
 
     /**
      * Register an existing user with the system and return (or return false on failier)
-     * 
+     *
      * @return Member|null
      */
     public function registerUser($data)

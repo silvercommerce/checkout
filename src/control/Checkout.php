@@ -45,8 +45,8 @@ class Checkout extends Controller
 
     /**
      * URL Used to generate links to this controller.
-     * 
-     * NOTE If you alter routes.yml, you MUST alter this. 
+     *
+     * NOTE If you alter routes.yml, you MUST alter this.
      * \SilverStripe\GraphQL\Auth\MemberAuthenticator;
      * @var string
      * @config
@@ -117,12 +117,12 @@ class Checkout extends Controller
     /**
      * A list of fields in the checkout module that are mapped to
      * omnipay allowed fields.
-     * 
+     *
      * This map is used to send the submitted checkout data
      * to omnipay services for payment.CheckoutLoginForm
-     * 
+     *
      * NOTE: Be careful changing this as most of these keys are required
-     * 
+     *
      * @var array
      * @config
      */
@@ -151,7 +151,7 @@ class Checkout extends Controller
 
     /**
      * Estimate linked to this checkout process
-     * 
+     *
      * @var Estimate
      * @config
      */
@@ -211,7 +211,7 @@ class Checkout extends Controller
 
     /**
      * Get the link to this controller
-     * 
+     *
      * @return string
      */
     public function Link($action = null)
@@ -297,7 +297,7 @@ class Checkout extends Controller
 
     /**
      * Initial login/details screen for the checkout
-     * 
+     *
      */
     public function index()
     {
@@ -428,7 +428,7 @@ class Checkout extends Controller
 
         $estimate = $this->getEstimate();
 
-        // If estimate does not have a shipping address, restart checkout 
+        // If estimate does not have a shipping address, restart checkout
         if (empty(trim($estimate->BillingAddress))) {
             return $this->redirect($this->Link());
         }
@@ -451,7 +451,7 @@ class Checkout extends Controller
 
             $this->extend("onBeforePayment");
 
-            return $this->render();   
+            return $this->render();
         } catch (Exception $e) {
             return $this->httpError(
                 400,
@@ -575,7 +575,7 @@ class Checkout extends Controller
             $form->loadDataFrom($contact);
             
             // Then fill with Address info
-            if($contact->DefaultLocation()) {
+            if ($contact->DefaultLocation()) {
                 $form->loadDataFrom($contact->DefaultLocation());
             }
         }
@@ -638,7 +638,7 @@ class Checkout extends Controller
 
         /**
      * Generate a gateway form to select available gateways
-     * 
+     *
      * @return Form
      */
     public function GatewayForm()
@@ -673,7 +673,7 @@ class Checkout extends Controller
                 _t('SilverCommerce\Checkout.PaymentSelection', 'Please choose how you would like to pay'),
                 $e->getMessage()
             );
-        } 
+        }
 
         $form = Form::create(
             $this,
@@ -738,9 +738,9 @@ class Checkout extends Controller
         $session->set(
             "Checkout.PaymentMethodID",
             $data["PaymentMethodID"]
-        );        
+        );
         
-        return $this->redirectBack();        
+        return $this->redirectBack();
     }
 
     public function doSubmitPayment($data, $form)
@@ -816,7 +816,7 @@ class Checkout extends Controller
     /**
      * Generate a random number based on the current time, a random int
      * and a third int that can be passed as a param.
-     * 
+     *
      * @param $int integer that can make the number "more random"
      * @param $length Length of the string
      * @return Int

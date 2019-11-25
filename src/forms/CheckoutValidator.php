@@ -7,14 +7,14 @@ use SilverStripe\SiteConfig\SiteConfig;
 
 /**
  * Custom validation for our checkout details
- * 
+ *
  */
 class CheckoutValidator extends RequiredFields
 {
 
     /**
      * List of fields that represent required billing address fields
-     * 
+     *
      * @var array
      */
     private static $billing_fields = [
@@ -31,7 +31,7 @@ class CheckoutValidator extends RequiredFields
 
     /**
      * Default field name for password field
-     * 
+     *
      * @var string
      */
     private static $password_field = "Password";
@@ -39,7 +39,7 @@ class CheckoutValidator extends RequiredFields
     /**
      * List of fields that represent the delivery address (fields that will be
      * removed it delivery is disabled or the same as shipping)
-     * 
+     *
      * @var array
      */
     private static $delivery_fields = [
@@ -54,7 +54,7 @@ class CheckoutValidator extends RequiredFields
 
     /**
      * Dropdown fields used for delivery (that might need to be disabled)
-     * 
+     *
      * @var array
      */
     private static $delivery_dropdown_fields = [
@@ -64,7 +64,7 @@ class CheckoutValidator extends RequiredFields
 
     /**
      * Is the current order deliverable (requires delivery fields)
-     * 
+     *
      * @var boolean
      */
     protected $deliverable;
@@ -73,7 +73,7 @@ class CheckoutValidator extends RequiredFields
      * Get is the current order deliverable (requires delivery fields)
      *
      * @return boolean
-     */ 
+     */
     public function getDeliverable()
     {
         return $this->deliverable;
@@ -84,7 +84,7 @@ class CheckoutValidator extends RequiredFields
      *
      * @param bool  $deliverable  Is the current order deliverable (requires delivery fields)
      * @return self
-     */ 
+     */
     public function setDeliverable($deliverable)
     {
         $this->deliverable = $deliverable;
@@ -94,7 +94,7 @@ class CheckoutValidator extends RequiredFields
 
     /**
      * Is the form currently using the location dropdown?
-     * 
+     *
      * @var boolean
      */
     protected $location_dropdown;
@@ -103,7 +103,7 @@ class CheckoutValidator extends RequiredFields
      * Get is the form currently using the location dropdown?
      *
      * @return boolean
-     */ 
+     */
     public function getLocationDropdown()
     {
         return $this->location_dropdown;
@@ -114,7 +114,7 @@ class CheckoutValidator extends RequiredFields
      *
      * @param boolean  $location_dropdown  Is the form currently using the location dropdown?
      * @return self
-     */ 
+     */
     public function setLocationDropdown($location_dropdown)
     {
         $this->location_dropdown = $location_dropdown;
