@@ -32,6 +32,7 @@ use SilverStripe\Omnipay\Service\ServiceFactory;
 use SilverStripe\CMS\Controllers\ContentController;
 use SilverCommerce\ShoppingCart\ShoppingCartFactory;
 use SilverCommerce\Checkout\Forms\CustomerDetailsForm;
+use SilverCommerce\ShoppingCart\Model\ShoppingCart;
 
 /**
  * Controller used to render the checkout process
@@ -308,7 +309,6 @@ class Checkout extends Controller
         // If we have turned off login, or member logged in
         $login_form = null;
         $customer_form = $this->CustomerForm();
-        $request = $this->getRequest();
         $config = SiteConfig::current_site_config();
         $member = Security::getCurrentUser();
 
@@ -356,7 +356,7 @@ class Checkout extends Controller
             $estimate = $this->getEstimate();
             $cart_estimate = ShoppingCartFactory::create()->getCurrent();
 
-            if (!$estimate || ($cart_estimate->ID != $estimate->ID)) {
+            if (!$estimate || (is_a($estimate, ShoppingCart::class) && ($cart_estimate->ID != $estimate->ID))) {
                 $this->setEstimate($cart_estimate);
             }
         }
