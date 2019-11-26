@@ -490,7 +490,6 @@ class CustomerDetailsForm extends Form
     public function doContinue($data)
     {
         $member = Security::getCurrentUser();
-        $config = SiteConfig::config();
         $estimate = $this->getEstimate();
         $session = $this->getSession();
 
@@ -573,11 +572,11 @@ class CustomerDetailsForm extends Form
             $estimate->CustomerID = $contact->ID;
 
             if (isset($data['SaveBillingAddress']) && $data['SaveBillingAddress'] == 1) {
-                $this->save_billing_address($data);
+                $this->saveBillingAddress($data);
             }
 
             if (isset($data['SaveShippingAddress']) && $data['SaveShippingAddress'] == 1) {
-                $this->save_shipping_address($data);
+                $this->saveShippingAddress($data);
             }
         }
 
@@ -657,17 +656,21 @@ class CustomerDetailsForm extends Form
     }
 
     /**
-     * If the flag has been set from the provided array, create a new
-     * address and assign to the current user.
+     * Save the billing address details to the provided member (or current if not set).
      *
-     * @param $data Form data submitted
+     * @param array  $data   Form data submitted
+     * @param Member $member Member to save against
+     *
+     * @return null
      */
-    private function save_billing_address($data)
+    protected function saveBillingAddress(array $data, Member $member = null)
     {
-        $member = Security::getCurrentUser();
-        
+        if (empty($member)) {
+            $member = Security::getCurrentUser();
+        }
+
         // If the user ticked "save address" then add to their account
-        if ($member && array_key_exists('SaveBillingAddress', $data) && $data['SaveBillingAddress'] == 1) {
+        if (isset($member) && array_key_exists('SaveBillingAddress', $data) && $data['SaveBillingAddress'] == 1) {
             // First save the details to the users account if they aren't set
             // We don't save email, as this is used for login
             $member->FirstName = ($member->FirstName) ? $member->FirstName : $data['FirstName'];
@@ -685,9 +688,19 @@ class CustomerDetailsForm extends Form
         }
     }
 
-    private function save_shipping_address($data)
+    /**
+     * Save the billing address details to the provided member (or current if not set).
+     *
+     * @param array  $data   Form data submitted
+     * @param Member $member Member to save against
+     *
+     * @return null
+     */
+    protected function saveShippingAddress(array $data, Member $member = null)
     {
-        $member = Security::getCurrentUser();
+        if (empty($member)) {
+            $member = Security::getCurrentUser();
+        }
 
         // If the user ticked "save address" then add to their account
         if ($member && array_key_exists('SaveShippingAddress', $data) && $data['SaveShippingAddress'] == 1) {
