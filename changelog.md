@@ -16,4 +16,5 @@ Ensure only shopping carts are merged on login
 
 ## 1.1.0
 
-* Change some private methods on CustomeDetailsForm to protected (and rename)
+* Change some private methods on CustomeDetailsForm to protected (and rename).
+* Break CustomerDetailsForm::doContinue out into sub methods.

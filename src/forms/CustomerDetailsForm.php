@@ -36,6 +36,20 @@ use ilateral\SilverStripe\Users\Control\RegisterController;
 class CustomerDetailsForm extends Form
 {
     /**
+     * Fields to ignore when saving form to estimate/contact
+     *
+     * @var array
+     */
+    private static $invalid_data_fields = [
+        "ID",
+        "ClassName",
+        "RecordClassName",
+        "LastEdited",
+        "Created",
+        "ContactID"
+    ];
+
+    /**
      * Estimate associateed with this form.
      *
      * @var Estimate
@@ -493,64 +507,7 @@ class CustomerDetailsForm extends Form
         $estimate = $this->getEstimate();
         $session = $this->getSession();
 
-        $invalid_keys = [
-            "ID",
-            "ClassName",
-            "RecordClassName",
-            "LastEdited",
-            "Created",
-            "ContactID"
-        ];
-
-        // If we are using a saved address, push to estimate
-        if (!isset($data['Address1']) && isset($data['BillingAddress'])) {
-            $billing_address = ContactLocation::get()
-                ->byID($data['BillingAddress']);
-
-            if (isset($billing_address)) {
-                foreach ($billing_address->toMap() as $key => $value) {
-                    if (!in_array($key, $invalid_keys)) {
-                        $estimate->{$key} = $value;
-                    }
-                }
-            }
-        }
-
-        // If we are using the billing details for delivery, duplicate them
-        if (isset($data['DuplicateDelivery']) && $data['DuplicateDelivery'] == 1) {
-            // Find any submitted data that is delivery and copy the data from
-            // the standard data
-            if (isset($data['BillingAddress'])) {
-                $data['ShippingAddress'] = $data['BillingAddress'];
-            }
-            foreach ($data as $key => $value) {
-                if (strpos($key, "Delivery") !== false) {
-                    $non_del_key = str_replace("Delivery", "", $key);
-
-                    if (isset($data[$non_del_key]) && !empty($data[$non_del_key])) {
-                        $data[$key] = $data[$non_del_key];
-                    } elseif (isset($estimate->$non_del_key) && !empty($estimate->$non_del_key)) {
-                        $data[$key] = $estimate->$non_del_key;
-                    }
-                }
-            }
-        }
-        
-        if (!isset($data['DeliveryAddress1']) && isset($data['ShippingAddress'])) {
-            $delivery_address = ContactLocation::get()
-                ->byID($data['ShippingAddress']);
-
-            if (isset($delivery_address)) {
-                foreach ($delivery_address->toMap() as $key => $value) {
-                    if (!in_array($key, $invalid_keys)) {
-                        $key = "Delivery" . $key;
-                        $estimate->{$key} = $value;
-                    }
-                }
-            }
-        }
-
-        // If the user is selected
+        // If user password set, register that user (or redirect back if there is an issue)
         if (!$member && isset($data['Password']) && isset($data['Password']["_Password"])  && !empty($data['Password']["_Password"])) {
             $member = $this->registerUser($data);
 
@@ -565,7 +522,7 @@ class CustomerDetailsForm extends Form
 
         // Update current form with any new data
         $this->loadDataFrom($data);
-        $this->saveInto($estimate);
+        $this->saveDataToEstimate($data);
 
         if ($member) {
             $contact = $member->Contact();
@@ -653,6 +610,69 @@ class CustomerDetailsForm extends Form
         }
 
         return $member;
+    }
+
+    /**
+     * Save custom form data to estimate then finally call parent::saveInto
+     *
+     * @param array $data Submitted form data
+     *
+     * @return self
+     */
+    public function saveDataToEstimate(array $data)
+    {
+        $estimate = $this->getEstimate();
+        $invalid_fields = $this->config()->get('invalid_data_fields');
+
+        // If we are using a saved address, push to estimate
+        if (!isset($data['Address1']) && isset($data['BillingAddress'])) {
+            $billing_address = ContactLocation::get()
+                ->byID($data['BillingAddress']);
+
+            if (isset($billing_address)) {
+                foreach ($billing_address->toMap() as $key => $value) {
+                    if (!in_array($key, $invalid_fields)) {
+                        $estimate->{$key} = $value;
+                    }
+                }
+            }
+        }
+
+        // If we are using the billing details for delivery, duplicate them
+        if (isset($data['DuplicateDelivery']) && $data['DuplicateDelivery'] == 1) {
+            // Find any submitted data that is delivery and copy the data from
+            // the standard data
+            if (isset($data['BillingAddress'])) {
+                $data['ShippingAddress'] = $data['BillingAddress'];
+            }
+            foreach ($data as $key => $value) {
+                if (strpos($key, "Delivery") !== false) {
+                    $non_del_key = str_replace("Delivery", "", $key);
+
+                    if (isset($data[$non_del_key]) && !empty($data[$non_del_key])) {
+                        $data[$key] = $data[$non_del_key];
+                    } elseif (isset($estimate->$non_del_key) && !empty($estimate->$non_del_key)) {
+                        $data[$key] = $estimate->$non_del_key;
+                    }
+                }
+            }
+        }
+        
+        if (!isset($data['DeliveryAddress1']) && isset($data['ShippingAddress'])) {
+            $delivery_address = ContactLocation::get()
+                ->byID($data['ShippingAddress']);
+
+            if (isset($delivery_address)) {
+                foreach ($delivery_address->toMap() as $key => $value) {
+                    if (!in_array($key, $invalid_fields)) {
+                        $key = "Delivery" . $key;
+                        $estimate->{$key} = $value;
+                    }
+                }
+            }
+        }
+
+        $this->saveInto($estimate);
     }
 
     /**
