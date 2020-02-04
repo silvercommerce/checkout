@@ -672,6 +672,11 @@ class CustomerDetailsForm extends Form
             }
         }
 
+        /** 
+         * We now need to save the new data back into the form 
+         * before we can save the form into the estimate 
+         */
+        $this->loadDataFrom($data);
         $this->saveInto($estimate);
     }
 
