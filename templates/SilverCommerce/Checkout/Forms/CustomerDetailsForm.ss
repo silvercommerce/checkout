@@ -14,35 +14,13 @@
         <% end_if %>
 
         <div class="Fields">
-            <% if $Fields.fieldByName("SavedBilling") %>
-                $Fields.fieldByName("SavedBilling").FieldHolder
-            <% end_if %>
+            <% loop $Fields %>
+                <% if $Name == 'PasswordFields' %><hr/><% end_if %>
 
-            <% if $Fields.fieldByName("BillingFields") %>
-                $Fields.fieldByName("BillingFields").FieldHolder
-            <% end_if %>
-            
-            <div class="line">
-                $Fields.fieldByName("DuplicateDelivery").FieldHolder
-            </div>
+                $FieldHolder
 
-            <% if $Fields.fieldByName("SavedShipping") %>
-                $Fields.fieldByName("SavedShipping").FieldHolder
-            <% end_if %>
-            
-            <% if $Fields.fieldByName("DeliveryFields") %>
-                $Fields.fieldByName("DeliveryFields").FieldHolder
-            <% end_if %>
-        
-            <div class="line">
-                $Fields.fieldByName("SaveShippingAddressHolder").FieldHolder
-            </div>
-
-            <% if $Fields.fieldByName("PasswordFields") %>
-                $Fields.fieldByName("PasswordFields").FieldHolder
-            <% end_if %>
-            
-            $Fields.dataFieldByName("SecurityID")
+                <% if $Name == 'BillingFields' %><hr/><% end_if %>
+            <% end_loop %>
         </div>
 
         <div class="clear"><!-- --></div>
