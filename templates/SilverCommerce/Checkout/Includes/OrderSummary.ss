@@ -18,16 +18,18 @@
     <br />
 
     <table class="checkout-total-table table width-100">
-        <tr class="subtotal text-right">
-            <td class="col-xs-6 size1of2">
-                <strong>
-                    <%t Checkout.SubTotal 'Sub Total' %>
-                </strong>
-            </td>
-            <td class="col-xs-6 size1of2">
-                {$SubTotal.Nice}
-            </td>
-        </tr>
+        <% if not $SiteConfig.ShowPriceAndTax %>
+            <tr class="subtotal text-right">
+                <td class="col-xs-6 size1of2">
+                    <strong>
+                        <%t Checkout.SubTotal 'Sub Total' %>
+                    </strong>
+                </td>
+                <td class="col-xs-6 size1of2">
+                    {$SubTotal.Nice}
+                </td>
+            </tr>
+        <% end_if %>
 
         <% if $Discounts.exists %>
             <tr class="discount">
@@ -62,16 +64,18 @@
             </tr>
         <% end_if %>
 
-        <tr class="tax text-right">
-            <td class="col-xs-6 size1of2">
-                <strong>
-                    <%t Checkout.Tax 'Tax' %>
-                </strong>
-            </td>
-            <td class="col-xs-6 size1of2">
-                {$TaxTotal.Nice}
-            </td>
-        </tr>
+        <% if not $SiteConfig.ShowPriceAndTax %>
+            <tr class="tax text-right">
+                <td class="col-xs-6 size1of2">
+                    <strong>
+                        <%t Checkout.Tax 'Tax' %>
+                    </strong>
+                </td>
+                <td class="col-xs-6 size1of2">
+                    {$TaxTotal.Nice}
+                </td>
+            </tr>
+        <% end_if %>
 
         <tr class="total text-right">
             <td class="col-xs-6 size1of2">
