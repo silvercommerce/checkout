@@ -17,7 +17,6 @@ use SilverStripe\Forms\HTMLEditor\HTMLEditorField;
 class SiteConfigExtension extends DataExtension
 {
     private static $db = [
-        'CheckoutShowTax' => "Boolean",
         'CheckoutLoginForm' => "Boolean",
         'CheckoutAllowGuest' => "Boolean",
         'PaymentSuccessContent' => 'HTMLText',
@@ -30,10 +29,6 @@ class SiteConfigExtension extends DataExtension
             'CheckoutSettings',
             _t("Checkout.CheckoutSettings", "Checkout Settings"),
             [
-                CheckboxField::create(
-                    'CheckoutShowTax',
-                    _t("Checkout.CheckoutShowTax", "Show Tax")
-                ),
                 CheckboxField::create(
                     'CheckoutLoginForm',
                     _t("Checkout.CheckoutLoginForm", "Show Login Form")
