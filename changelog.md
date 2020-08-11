@@ -13,3 +13,7 @@ Add additional extension hook to payment submission process
 ## 1.0.2
 
 Ensure only shopping carts are merged on login
+
+## 1.1.4
+
+Added Tax switching to order summary unit price
