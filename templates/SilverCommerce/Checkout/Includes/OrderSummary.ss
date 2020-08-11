@@ -9,7 +9,13 @@
                     <p>$Quantity x $Title</p>
                 </td>
                 <td class="text-right" style="vertical-align: middle;">        
-                    <p>$UnitPrice.Nice</p>
+                    <p>
+                        <% if not $SiteConfig.ShowPriceAndTax %>
+                            $UnitPrice.Nice
+                        <% else %>
+                            $UnitTotal.Nice
+                        <% end_if %>
+                    </p>
                 </td>  
             </tr>
         <% end_loop %>
