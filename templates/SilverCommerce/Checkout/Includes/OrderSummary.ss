@@ -9,7 +9,9 @@
                     <p>$Quantity x $Title</p>
                 </td>
                 <td class="text-right" style="vertical-align: middle;">        
-                    <p>$UnitPrice.Nice</p>
+                    <p>
+                        $getFormattedPrice($ShowPriceWithTax) 
+                    </p>
                 </td>  
             </tr>
         <% end_loop %>
@@ -62,16 +64,18 @@
             </tr>
         <% end_if %>
 
-        <tr class="tax text-right">
-            <td class="col-xs-6 size1of2">
-                <strong>
-                    <%t Checkout.Tax 'Tax' %>
-                </strong>
-            </td>
-            <td class="col-xs-6 size1of2">
-                {$TaxTotal.Nice}
-            </td>
-        </tr>
+        <% if not $ShowPriceWithTax %>
+            <tr class="tax text-right">
+                <td class="col-xs-6 size1of2">
+                    <strong>
+                        <%t Checkout.Tax 'Tax' %>
+                    </strong>
+                </td>
+                <td class="col-xs-6 size1of2">
+                    {$TaxTotal.Nice}
+                </td>
+            </tr>
+        <% end_if %>
 
         <tr class="total text-right">
             <td class="col-xs-6 size1of2">

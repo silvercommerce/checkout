@@ -26,3 +26,11 @@ Ensure only shopping carts are merged on login
 ## 1.1.2
 
 * Simplify CustomDetailForm template (and allow additional fields to be added more easily)
+
+## 1.1.3
+
+* Correctly link show price and tax checkbox and order summary
+
+## 1.1.4
+
+Added Tax switching to order summary unit price
