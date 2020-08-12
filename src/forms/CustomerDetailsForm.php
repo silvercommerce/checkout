@@ -36,17 +36,33 @@ use ilateral\SilverStripe\Users\Control\RegisterController;
 class CustomerDetailsForm extends Form
 {
     /**
+     * Fields to ignore when saving form to estimate/contact
+     *
+     * @var array
+     */
+    private static $invalid_data_fields = [
+        "ID",
+        "ClassName",
+        "RecordClassName",
+        "LastEdited",
+        "Created",
+        "ContactID"
+    ];
+
+    /**
      * Estimate associateed with this form.
      *
      * @var Estimate
      */
     protected $estimate;
 
-    public function getEstimate() {
+    public function getEstimate()
+    {
         return $this->estimate;
     }
 
-    public function setEstimate(Estimate $estimate) {
+    public function setEstimate(Estimate $estimate)
+    {
         $this->estimate = $estimate;
         return $this;
     }
@@ -58,11 +74,13 @@ class CustomerDetailsForm extends Form
      */
     protected $contact;
 
-    public function getContact() {
+    public function getContact()
+    {
         return $this->contact;
     }
 
-    public function setContact(Contact $contact) {
+    public function setContact(Contact $contact)
+    {
         $this->contact = $contact;
         return $this;
     }
@@ -85,7 +103,7 @@ class CustomerDetailsForm extends Form
         $fields = FieldList::create();
 
         // Set default form parameters
-        $data = $session->get("FormInfo.{$this->FormName()}.settings"); 
+        $data = $session->get("FormInfo.{$this->FormName()}.settings");
 
         $new_billing = false;
         $same_shipping = 1;
@@ -131,7 +149,7 @@ class CustomerDetailsForm extends Form
             if ($config->CheckoutAllowGuest == true) {
                 $register_title = _t('SilverCommerce\Checkout.CreateAccountOptional', 'Create Account (Optional)');
             } else {
-                $register_title = _t('SilverCommerce\Checkout.CreateAccountRequired', 'Create Account (Required)');                
+                $register_title = _t('SilverCommerce\Checkout.CreateAccountRequired', 'Create Account (Required)');
             }
 
             $fields->add(
@@ -142,7 +160,7 @@ class CustomerDetailsForm extends Form
                         3
                     ),
                     $pw_field = ConfirmedPasswordField::create("Password")
-                        ->setAttribute('formnovalidate',true)
+                        ->setAttribute('formnovalidate', true)
                 )->setName("PasswordFields")
             );
 
@@ -153,7 +171,7 @@ class CustomerDetailsForm extends Form
 
         parent::__construct(
             $controller,
-            $name, 
+            $name,
             $fields,
             FieldList::create(
                 FormAction::create(
@@ -175,7 +193,7 @@ class CustomerDetailsForm extends Form
 
     /**
      * Generate a FieldList of billing address fields
-     * 
+     *
      * @return FieldList
      */
     public function getBillingFields()
@@ -211,7 +229,6 @@ class CustomerDetailsForm extends Form
                         _t('SilverCommerce\Checkout.Phone', 'Phone Number')
                     )
                 )->setName("PersonalFields"),
-
                 // Address details fields
                 $address_fields = CompositeField::create(
                     TextField::create(
@@ -264,7 +281,7 @@ class CustomerDetailsForm extends Form
                         'Use Saved Address'
                     )
                 )->addextraClass('btn btn-link')
-                ->setAttribute('formnovalidate',true));
+                ->setAttribute('formnovalidate', true));
             }
         }
 
@@ -273,7 +290,7 @@ class CustomerDetailsForm extends Form
 
     /**
      * Generate a FieldList of billing fields if the user has saved addresses
-     * 
+     *
      * @return FieldList
      */
     public function getBillingDropdownFields()
@@ -297,14 +314,14 @@ class CustomerDetailsForm extends Form
                         'Use different address'
                     )
                 )->addextraClass('btn btn-link')
-                ->setAttribute('formnovalidate',true)
+                ->setAttribute('formnovalidate', true)
             )->setName("BillingFields")
         );
     }
 
     /**
      * Generate a FieldList of delivery address fields
-     * 
+     *
      * @return FieldList
      */
     public function getDeliveryFields()
@@ -330,7 +347,6 @@ class CustomerDetailsForm extends Form
                         _t('SilverCommerce\Checkout.Surname', 'Surname')
                     )
                 )->setName("PersonalFields"),
-
                 $address_fields = CompositeField::create(
                     TextField::create(
                         'DeliveryAddress1',
@@ -380,7 +396,7 @@ class CustomerDetailsForm extends Form
                     'Use Saved Address'
                 )
             )->addextraClass('btn btn-link')
-            ->setAttribute('formnovalidate',true));
+            ->setAttribute('formnovalidate', true));
         }
 
         return $fields;
@@ -389,7 +405,7 @@ class CustomerDetailsForm extends Form
     /**
      * Generate a FieldList containing fields for if the user
      * has existing locations
-     * 
+     *
      * @return FieldList
      */
     public function getDeliveryDropdownFields()
@@ -413,7 +429,7 @@ class CustomerDetailsForm extends Form
                         'Use Different Address'
                     )
                 )->addextraClass('btn btn-link')
-                ->setAttribute('formnovalidate',true)
+                ->setAttribute('formnovalidate', true)
             )->setName("DeliveryFields")
         );
     }
@@ -441,31 +457,31 @@ class CustomerDetailsForm extends Form
         return CheckoutValidator::create($deliverable, $billing_dropdown);
     }
 
-    public function doAddNewBilling($data) 
+    public function doAddNewBilling($data)
     {
         $data['NewBilling'] = true;
-        return $this->doUpdateForm($data);        
+        return $this->doUpdateForm($data);
     }
 
-    public function doAddNewShipping($data) 
+    public function doAddNewShipping($data)
     {
         $data['NewShipping'] = true;
-        return $this->doUpdateForm($data);        
+        return $this->doUpdateForm($data);
     }
 
-    public function doUseSavedBilling($data) 
+    public function doUseSavedBilling($data)
     {
         $data['NewBilling'] = false;
-        return $this->doUpdateForm($data);        
+        return $this->doUpdateForm($data);
     }
 
-    public function doUseSavedShipping($data) 
+    public function doUseSavedShipping($data)
     {
         $data['NewShipping'] = false;
         return $this->doUpdateForm($data);
     }
 
-    public function doUpdateForm($data) 
+    public function doUpdateForm($data)
     {
         if (!isset($data['DuplicateDelivery'])) {
             $data['DuplicateDelivery'] = 0;
@@ -488,68 +504,10 @@ class CustomerDetailsForm extends Form
     public function doContinue($data)
     {
         $member = Security::getCurrentUser();
-        $config = SiteConfig::config();
         $estimate = $this->getEstimate();
         $session = $this->getSession();
 
-        $invalid_keys = [
-            "ID",
-            "ClassName",
-            "RecordClassName",
-            "LastEdited",
-            "Created",
-            "ContactID"
-        ];
-
-        // If we are using a saved address, push to estimate
-        if (!isset($data['Address1']) && isset($data['BillingAddress'])) {
-            $billing_address = ContactLocation::get()
-                ->byID($data['BillingAddress']);
-
-            if (isset($billing_address)) {
-                foreach ($billing_address->toMap() as $key => $value) {
-                    if (!in_array($key, $invalid_keys)) {
-                        $estimate->{$key} = $value;
-                    }
-                }
-            }
-        }
-
-        // If we are using the billing details for delivery, duplicate them
-        if (isset($data['DuplicateDelivery']) && $data['DuplicateDelivery'] == 1) {
-            // Find any submitted data that is delivery and copy the data from
-            // the standard data
-            if (isset($data['BillingAddress'])) {
-                $data['ShippingAddress'] = $data['BillingAddress'];
-            }
-            foreach ($data as $key => $value) {
-                if (strpos($key, "Delivery") !== false) {
-                    $non_del_key = str_replace("Delivery", "", $key);
-
-                    if (isset($data[$non_del_key]) && !empty($data[$non_del_key])) {
-                        $data[$key] = $data[$non_del_key];
-                    } else if (isset($estimate->$non_del_key) && !empty($estimate->$non_del_key)) {
-                        $data[$key] = $estimate->$non_del_key;
-                    }
-                }
-            }
-        }
-        
-        if (!isset($data['DeliveryAddress1']) && isset($data['ShippingAddress'])) {
-            $delivery_address = ContactLocation::get()
-                ->byID($data['ShippingAddress']);
-
-            if (isset($delivery_address)) {
-                foreach ($delivery_address->toMap() as $key => $value) {
-                    if (!in_array($key, $invalid_keys)) {
-                        $key = "Delivery" . $key;
-                        $estimate->{$key} = $value;
-                    }
-                }
-            }
-        }
-
-        // If the user is selected 
+        // If user password set, register that user (or redirect back if there is an issue)
         if (!$member && isset($data['Password']) && isset($data['Password']["_Password"])  && !empty($data['Password']["_Password"])) {
             $member = $this->registerUser($data);
 
@@ -564,18 +522,18 @@ class CustomerDetailsForm extends Form
 
         // Update current form with any new data
         $this->loadDataFrom($data);
-        $this->saveInto($estimate);
+        $this->saveDataToEstimate($data);
 
         if ($member) {
             $contact = $member->Contact();
             $estimate->CustomerID = $contact->ID;
 
             if (isset($data['SaveBillingAddress']) && $data['SaveBillingAddress'] == 1) {
-                $this->save_billing_address($data);
+                $this->saveBillingAddress($data);
             }
 
             if (isset($data['SaveShippingAddress']) && $data['SaveShippingAddress'] == 1) {
-                $this->save_shipping_address($data);
+                $this->saveShippingAddress($data);
             }
         }
 
@@ -594,7 +552,7 @@ class CustomerDetailsForm extends Form
 
     /**
      * Register an existing user with the system and return (or return false on failier)
-     * 
+     *
      * @return Member|null
      */
     public function registerUser($data)
@@ -655,17 +613,89 @@ class CustomerDetailsForm extends Form
     }
 
     /**
-     * If the flag has been set from the provided array, create a new
-     * address and assign to the current user.
+     * Save custom form data to estimate then finally call parent::saveInto
      *
-     * @param $data Form data submitted
+     * @param array $data Submitted form data
+     *
+     * @return self
      */
-    private function save_billing_address($data)
+    public function saveDataToEstimate(array $data)
     {
-        $member = Security::getCurrentUser();
+        $estimate = $this->getEstimate();
+        $invalid_fields = $this->config()->get('invalid_data_fields');
+
+        // If we are using a saved address, push to estimate
+        if (!isset($data['Address1']) && isset($data['BillingAddress'])) {
+            $billing_address = ContactLocation::get()
+                ->byID($data['BillingAddress']);
+
+            if (isset($billing_address)) {
+                foreach ($billing_address->toMap() as $key => $value) {
+                    if (!in_array($key, $invalid_fields)) {
+                        $estimate->{$key} = $value;
+                    }
+                }
+            }
+        }
+
+        // If we are using the billing details for delivery, duplicate them
+        if (isset($data['DuplicateDelivery']) && $data['DuplicateDelivery'] == 1) {
+            // Find any submitted data that is delivery and copy the data from
+            // the standard data
+            if (isset($data['BillingAddress'])) {
+                $data['ShippingAddress'] = $data['BillingAddress'];
+            }
+            foreach ($data as $key => $value) {
+                if (strpos($key, "Delivery") !== false) {
+                    $non_del_key = str_replace("Delivery", "", $key);
+
+                    if (isset($data[$non_del_key]) && !empty($data[$non_del_key])) {
+                        $data[$key] = $data[$non_del_key];
+                    } elseif (isset($estimate->$non_del_key) && !empty($estimate->$non_del_key)) {
+                        $data[$key] = $estimate->$non_del_key;
+                    }
+                }
+            }
+        }
         
+        if (!isset($data['DeliveryAddress1']) && isset($data['ShippingAddress'])) {
+            $delivery_address = ContactLocation::get()
+                ->byID($data['ShippingAddress']);
+
+            if (isset($delivery_address)) {
+                foreach ($delivery_address->toMap() as $key => $value) {
+                    if (!in_array($key, $invalid_fields)) {
+                        $key = "Delivery" . $key;
+                        $estimate->{$key} = $value;
+                    }
+                }
+            }
+        }
+
+        /** 
+         * We now need to save the new data back into the form 
+         * before we can save the form into the estimate 
+         */
+        $this->loadDataFrom($data);
+        $this->saveInto($estimate);
+    }
+
+    /**
+     * Save the billing address details to the provided member (or current if not set).
+     *
+     * @param array  $data   Form data submitted
+     * @param Member $member Member to save against
+     *
+     * @return null
+     */
+    protected function saveBillingAddress(array $data, Member $member = null)
+    {
+        if (empty($member)) {
+            $member = Security::getCurrentUser();
+        }
+
         // If the user ticked "save address" then add to their account
-        if ($member && array_key_exists('SaveBillingAddress', $data) && $data['SaveBillingAddress'] == 1) {
+        if (isset($member) && array_key_exists('SaveBillingAddress', $data) && $data['SaveBillingAddress'] == 1) {
             // First save the details to the users account if they aren't set
             // We don't save email, as this is used for login
             $member->FirstName = ($member->FirstName) ? $member->FirstName : $data['FirstName'];
@@ -683,9 +713,19 @@ class CustomerDetailsForm extends Form
         }
     }
 
-    private function save_shipping_address($data)
+    /**
+     * Save the billing address details to the provided member (or current if not set).
+     *
+     * @param array  $data   Form data submitted
+     * @param Member $member Member to save against
+     *
+     * @return null
+     */
+    protected function saveShippingAddress(array $data, Member $member = null)
     {
-        $member = Security::getCurrentUser();
+        if (empty($member)) {
+            $member = Security::getCurrentUser();
+        }
 
         // If the user ticked "save address" then add to their account
         if ($member && array_key_exists('SaveShippingAddress', $data) && $data['SaveShippingAddress'] == 1) {

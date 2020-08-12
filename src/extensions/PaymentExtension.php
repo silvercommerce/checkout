@@ -10,7 +10,7 @@ use SilverCommerce\OrdersAdmin\Model\Estimate;
 /**
  * Add association to an order to payments and add
  * setting order status on capture.
- * 
+ *
  * @author Mo <morven@ilateral.co.uk>
  * @package checkout
  * @subpackage extensions

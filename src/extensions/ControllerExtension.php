@@ -17,7 +17,7 @@ class ControllerExtension extends Extension
 {
     /**
      * Get the checkout (so we can retrieve links, etc)
-     * 
+     *
      * @return Checkout
      */
     public function getCheckout()
