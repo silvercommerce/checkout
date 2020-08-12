@@ -10,11 +10,7 @@
                 </td>
                 <td class="text-right" style="vertical-align: middle;">        
                     <p>
-                        <% if not $SiteConfig.ShowPriceAndTax %>
-                            $UnitPrice.Nice
-                        <% else %>
-                            $UnitTotal.Nice
-                        <% end_if %>
+                        $getFormattedPrice($ShowPriceWithTax) 
                     </p>
                 </td>  
             </tr>
@@ -68,16 +64,18 @@
             </tr>
         <% end_if %>
 
-        <tr class="tax text-right">
-            <td class="col-xs-6 size1of2">
-                <strong>
-                    <%t Checkout.Tax 'Tax' %>
-                </strong>
-            </td>
-            <td class="col-xs-6 size1of2">
-                {$TaxTotal.Nice}
-            </td>
-        </tr>
+        <% if not $ShowPriceWithTax %>
+            <tr class="tax text-right">
+                <td class="col-xs-6 size1of2">
+                    <strong>
+                        <%t Checkout.Tax 'Tax' %>
+                    </strong>
+                </td>
+                <td class="col-xs-6 size1of2">
+                    {$TaxTotal.Nice}
+                </td>
+            </tr>
+        <% end_if %>
 
         <tr class="total text-right">
             <td class="col-xs-6 size1of2">
