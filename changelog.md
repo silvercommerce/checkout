@@ -8,14 +8,16 @@ Initial stable release
 
 ## 1.0.1
 
-Add additional extension hook to payment submission process
+* Add additional extension hooks
 
 ## 1.0.2
 
-Ensure only shopping carts are merged on login
+* Only merge shopping carts on login
+* Ensure only shopping carts are merged on login
 
 ## 1.1.0
 
+* Improvements to estimate save process
 * Change some private methods on CustomeDetailsForm to protected (and rename).
 * Break CustomerDetailsForm::doContinue out into sub methods.
 
@@ -33,4 +35,5 @@ Ensure only shopping carts are merged on login
 
 ## 1.1.4
 
-Added Tax switching to order summary unit price
+* Added Tax switching to order summary unit price
+* Add additional extension hook to payment submission process
