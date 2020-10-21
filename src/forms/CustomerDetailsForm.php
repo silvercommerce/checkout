@@ -524,6 +524,8 @@ class CustomerDetailsForm extends Form
         $this->loadDataFrom($data);
         $this->saveDataToEstimate($data);
 
+        // Either push any saved data to the user or generate a contact
+        // and link to the user
         if ($member) {
             $contact = $member->Contact();
             $estimate->CustomerID = $contact->ID;
@@ -535,6 +537,49 @@ class CustomerDetailsForm extends Form
             if (isset($data['SaveShippingAddress']) && $data['SaveShippingAddress'] == 1) {
                 $this->saveShippingAddress($data);
             }
+        } elseif(!$estimate->Customer()->exists()) {
+            // Check if a contact exists with the order data, else create a new one
+            $contact = Contact::get()->filter(
+                [
+                    'FirstName' => $data['FirstName'],
+                    'Surname' => $data['Surname'],
+                    'Email' => $data['Email'],
+                ]
+            )->first();
+    
+            if (empty($contact)) {
+                $contact = Contact::create();
+            }
+
+            // Update contact, and add phone number (as field names do not match)
+            $this->saveInto($contact);
+            $contact->Phone = $data['PhoneNumber'];
+            $contact->write();
+
+            // Check if contact has this address already, otherwise create it
+            $address = $this->findAddressFromContact($data['Address1'], $data['PostCode'], $contact);
+            $address = $this->saveDataToAddress($address);
+            $address->ContactID = $contact->ID;
+            $address->write();
+
+            // If we are shipping to a different address, create that as well
+            if (empty($data['DuplicateDelivery']) || $data['DuplicateDelivery'] == 0) {
+                $address = $this->findAddressFromContact(
+                    $data['DeliveryAddress1'],
+                    $data['DeliveryPostCode'],
+                    $contact
+                );
+                $address = $this->saveDataToAddress($address, true);
+                $address->ContactID = $contact->ID;
+                $address->write();
+            }
+
+            $estimate->CustomerID = $contact->ID;
+        } else {
+            // Update an existing contact is they have changed the details
+            $contact = $estimate->Contact();
+            $this->saveInto($contact);
+            $contact->write();
         }
 
         $estimate->write();
@@ -707,7 +752,7 @@ class CustomerDetailsForm extends Form
             $contact->write();
 
             $address = ContactLocation::create();
-            $this->saveInto($address);
+            $address = $this->saveDataToAddress($address);
             $address->ContactID = $contact->ID;
             $address->write();
         }
@@ -738,6 +783,51 @@ class CustomerDetailsForm extends Form
             $contact = $member->Contact();
 
             $address = ContactLocation::create();
+            $address = $this->saveDataToAddress($address, true);
+            $address->ContactID = $contact->ID;
+            $address->write();
+        }
+    }
+
+    /**
+     * Try to return an existing address from the provided contact or an empty ContactLocation
+     * (if none found)
+     *
+     * @param string $address_one The line 1 of the address 
+     * @param string $post_code The postal code
+     * @param Contact $contact The contact to search against
+     *
+     * @return ContactLocation
+     */
+    protected function findAddressFromContact(string $address_one, string $post_code, Contact $contact)
+    {
+        $address = $contact
+            ->Locations()
+            ->filter([
+                'Address1' => $address_one,
+                'PostCode' => $post_code
+            ])->first();
+
+        if (empty($address)) {
+            $address = ContactLocation::create();
+            $address->ID = -1;
+        }
+
+        return $address;
+    }
+
+    /**
+     * Save the current data to the provided address
+     *
+     * @param ContactLocation a contact location
+     * @param boolean $shipping_fields Are we currently saving shipping fields
+     *
+     * @return ContactLocation
+     */
+    protected function saveDataToAddress(ContactLocation $address, $shipping_fields = false)
+    {
+        if ($shipping_fields) {
+            $data = $this->getData();
             $address->Company = $data['DeliveryCompany'];
             $address->FirstName = $data['DeliveryFirstName'];
             $address->Surname = $data['DeliverySurname'];
@@ -747,8 +837,10 @@ class CustomerDetailsForm extends Form
             $address->PostCode = $data['DeliveryPostCode'];
             $address->County = $data['DeliveryCounty'];
             $address->Country = $data['DeliveryCountry'];
-            $address->ContactID = $contact->ID;
-            $address->write();
+        } else {
+            $this->saveInto($address);
         }
+
+        return $address;
     }
 }
