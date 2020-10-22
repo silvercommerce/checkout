@@ -563,7 +563,8 @@ class CustomerDetailsForm extends Form
             $address->write();
 
             // If we are shipping to a different address, create that as well
-            if (empty($data['DuplicateDelivery']) || $data['DuplicateDelivery'] == 0) {
+            if ((empty($data['DuplicateDelivery']) || $data['DuplicateDelivery'] == 0)
+                && isset($data['DeliveryAddress1']) && isset($data['DeliveryPostCode'])) {
                 $address = $this->findAddressFromContact(
                     $data['DeliveryAddress1'],
                     $data['DeliveryPostCode'],
