@@ -13,7 +13,6 @@ use SilverStripe\Forms\EmailField;
 use SilverStripe\Forms\FormAction;
 use SilverStripe\Forms\HeaderField;
 use SilverStripe\Security\Security;
-use SilverStripe\View\Requirements;
 use SilverStripe\Forms\CheckboxField;
 use SilverStripe\Forms\DropdownField;
 use SilverStripe\Forms\CompositeField;
@@ -26,6 +25,7 @@ use SilverStripe\Forms\ConfirmedPasswordField;
 use SilverCommerce\ContactAdmin\Model\ContactLocation;
 use SilverCommerce\GeoZones\Forms\RegionSelectionField;
 use ilateral\SilverStripe\Users\Control\RegisterController;
+use SilverCommerce\OrdersAdmin\Factory\LineItemFactory;
 
 /**
  * Form for collecting customer details and assigning them to
@@ -507,6 +507,11 @@ class CustomerDetailsForm extends Form
         $estimate = $this->getEstimate();
         $session = $this->getSession();
 
+        /**
+         * @var \SilverCommerce\Checkout\Control\Checkout
+         */
+        $checkout = $this->getController();
+
         // If user password set, register that user (or redirect back if there is an issue)
         if (!$member && isset($data['Password']) && isset($data['Password']["_Password"])  && !empty($data['Password']["_Password"])) {
             $member = $this->registerUser($data);
@@ -578,18 +583,26 @@ class CustomerDetailsForm extends Form
             $estimate->CustomerID = $contact->ID;
         } else {
             // Update an existing contact is they have changed the details
-            $contact = $estimate->Contact();
+            $contact = $estimate->Customer();
             $this->saveInto($contact);
             $contact->write();
+        }
+
+        // Loop through the estimate's items and update them (so tax
+        // can be correctly calculated)
+        foreach ($estimate->Items() as $item) {
+            LineItemFactory::create()
+                ->setItem($item)
+                ->setParent($estimate) // Force estimate to pickup new delivery
+                ->update()
+                ->write();
         }
 
         $estimate->write();
 
         $session->clear("FormInfo.{$this->FormName()}.settings");
 
-        $url = $this
-            ->getController()
-            ->Link("postage");
+        $url = $checkout->Link("postage");
 
         return $this
             ->getController()
