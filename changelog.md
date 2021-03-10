@@ -37,3 +37,7 @@ Initial stable release
 
 * Added Tax switching to order summary unit price
 * Add additional extension hook to payment submission process
+
+## 1.1.5
+
+* After delivery address is selected, re-calculate tax
