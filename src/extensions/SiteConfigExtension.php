@@ -11,7 +11,7 @@ use SilverStripe\Forms\HTMLEditor\HTMLEditorField;
 /**
  * Extension to add extra settings into siteconfig
  *
- * @author i-lateral (http://www.i-lateral.com)
+ * @author  i-lateral (http://www.i-lateral.com)
  * @package checkout
  */
 class SiteConfigExtension extends DataExtension

@@ -202,7 +202,6 @@ class CustomerDetailsForm extends Form
 
         $fields = FieldList::create(
             CompositeField::create(
-
                 // Personal details fields
                 CompositeField::create(
                     TextField::create(
@@ -216,10 +215,12 @@ class CustomerDetailsForm extends Form
                     TextField::create(
                         "Company",
                         _t('SilverCommerce\Checkout.Company', "Company")
-                    )->setRightTitle(_t(
-                        "SilverCommerce\Checkout.Optional",
-                        "Optional"
-                    )),
+                    )->setRightTitle(
+                        _t(
+                            "SilverCommerce\Checkout.Optional",
+                            "Optional"
+                        )
+                    ),
                     EmailField::create(
                         'Email',
                         _t('SilverCommerce\Checkout.Email', 'Email')
@@ -238,10 +239,12 @@ class CustomerDetailsForm extends Form
                     TextField::create(
                         'Address2',
                         _t('SilverCommerce\Checkout.Address2', 'Address Line 2')
-                    )->setRightTitle(_t(
-                        "SilverCommerce\Checkout.Optional",
-                        "Optional"
-                    )),
+                    )->setRightTitle(
+                        _t(
+                            "SilverCommerce\Checkout.Optional",
+                            "Optional"
+                        )
+                    ),
                     TextField::create(
                         'City',
                         _t('SilverCommerce\Checkout.City', 'City')
@@ -268,20 +271,24 @@ class CustomerDetailsForm extends Form
 
         // Add a save address for later checkbox if a user is logged in
         if (!empty($contact)) {
-            $address_fields->push(CheckboxField::create(
-                "SaveBillingAddress",
-                _t('SilverCommerce\Checkout.SaveAddress', 'Save Address')
-            ));
+            $address_fields->push(
+                CheckboxField::create(
+                    "SaveBillingAddress",
+                    _t('SilverCommerce\Checkout.SaveAddress', 'Save Address')
+                )
+            );
 
             if ($contact && $contact->Locations()->exists()) {
-                $address_fields->push(FormAction::create(
-                    'doUseSavedBilling',
-                    _t(
-                        'SilverCommerce\Checkout.UseSavedAddress',
-                        'Use Saved Address'
-                    )
-                )->addextraClass('btn btn-link')
-                ->setAttribute('formnovalidate', true));
+                $address_fields->push(
+                    FormAction::create(
+                        'doUseSavedBilling',
+                        _t(
+                            'SilverCommerce\Checkout.UseSavedAddress',
+                            'Use Saved Address'
+                        )
+                    )->addextraClass('btn btn-link')
+                        ->setAttribute('formnovalidate', true)
+                );
             }
         }
 
@@ -314,7 +321,7 @@ class CustomerDetailsForm extends Form
                         'Use different address'
                     )
                 )->addextraClass('btn btn-link')
-                ->setAttribute('formnovalidate', true)
+                    ->setAttribute('formnovalidate', true)
             )->setName("BillingFields")
         );
     }
@@ -334,10 +341,12 @@ class CustomerDetailsForm extends Form
                     TextField::create(
                         'DeliveryCompany',
                         _t('SilverCommerce\Checkout.Company', 'Company')
-                    )->setRightTitle(_t(
-                        "SilverCommerce\Checkout.Optional",
-                        "Optional"
-                    )),
+                    )->setRightTitle(
+                        _t(
+                            "SilverCommerce\Checkout.Optional",
+                            "Optional"
+                        )
+                    ),
                     TextField::create(
                         'DeliveryFirstName',
                         _t('SilverCommerce\Checkout.FirstName', 'First Name(s)')
@@ -382,21 +391,25 @@ class CustomerDetailsForm extends Form
 
         // Add a save address for later checkbox if a user is logged in
         if ($contact) {
-            $address_fields->push(CheckboxField::create(
-                "SaveShippingAddress",
-                _t('SilverCommerce\Checkout.SaveAddress', 'Save Address')
-            ));
+            $address_fields->push(
+                CheckboxField::create(
+                    "SaveShippingAddress",
+                    _t('SilverCommerce\Checkout.SaveAddress', 'Save Address')
+                )
+            );
         }
 
         if ($contact && $contact->Locations()->count() > 1) {
-            $address_fields->push(FormAction::create(
-                'doUseSavedShipping',
-                _t(
-                    'SilverCommerce\Checkout.UseSavedAddress',
-                    'Use Saved Address'
-                )
-            )->addextraClass('btn btn-link')
-            ->setAttribute('formnovalidate', true));
+            $address_fields->push(
+                FormAction::create(
+                    'doUseSavedShipping',
+                    _t(
+                        'SilverCommerce\Checkout.UseSavedAddress',
+                        'Use Saved Address'
+                    )
+                )->addextraClass('btn btn-link')
+                    ->setAttribute('formnovalidate', true)
+            );
         }
 
         return $fields;
@@ -429,7 +442,7 @@ class CustomerDetailsForm extends Form
                         'Use Different Address'
                     )
                 )->addextraClass('btn btn-link')
-                ->setAttribute('formnovalidate', true)
+                    ->setAttribute('formnovalidate', true)
             )->setName("DeliveryFields")
         );
     }
@@ -569,7 +582,8 @@ class CustomerDetailsForm extends Form
 
             // If we are shipping to a different address, create that as well
             if ((empty($data['DuplicateDelivery']) || $data['DuplicateDelivery'] == 0)
-                && isset($data['DeliveryAddress1']) && isset($data['DeliveryPostCode'])) {
+                && isset($data['DeliveryAddress1']) && isset($data['DeliveryPostCode'])
+            ) {
                 $address = $this->findAddressFromContact(
                     $data['DeliveryAddress1'],
                     $data['DeliveryPostCode'],
@@ -619,8 +633,8 @@ class CustomerDetailsForm extends Form
         $session = $this->getSession();
 
         $member = Member::get()
-                ->filter("Email", $data["Email"])
-                ->first();
+            ->filter("Email", $data["Email"])
+            ->first();
 
         // Check if a user already exists
         if ($member) {
@@ -807,9 +821,9 @@ class CustomerDetailsForm extends Form
      * Try to return an existing address from the provided contact or an empty ContactLocation
      * (if none found)
      *
-     * @param string $address_one The line 1 of the address 
-     * @param string $post_code The postal code
-     * @param Contact $contact The contact to search against
+     * @param string  $address_one The line 1 of the address 
+     * @param string  $post_code   The postal code
+     * @param Contact $contact     The contact to search against
      *
      * @return ContactLocation
      */
@@ -817,10 +831,12 @@ class CustomerDetailsForm extends Form
     {
         $address = $contact
             ->Locations()
-            ->filter([
+            ->filter(
+                [
                 'Address1' => $address_one,
                 'PostCode' => $post_code
-            ])->first();
+                ]
+            )->first();
 
         if (empty($address)) {
             $address = ContactLocation::create();
@@ -834,7 +850,7 @@ class CustomerDetailsForm extends Form
      * Save the current data to the provided address
      *
      * @param ContactLocation a contact location
-     * @param boolean $shipping_fields Are we currently saving shipping fields
+     * @param boolean                            $shipping_fields Are we currently saving shipping fields
      *
      * @return ContactLocation
      */

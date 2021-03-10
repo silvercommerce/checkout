@@ -7,7 +7,6 @@ use SilverStripe\SiteConfig\SiteConfig;
 
 /**
  * Custom validation for our checkout details
- *
  */
 class CheckoutValidator extends RequiredFields
 {
@@ -70,10 +69,10 @@ class CheckoutValidator extends RequiredFields
     protected $deliverable;
 
         /**
-     * Get is the current order deliverable (requires delivery fields)
-     *
-     * @return boolean
-     */
+         * Get is the current order deliverable (requires delivery fields)
+         *
+         * @return boolean
+         */
     public function getDeliverable()
     {
         return $this->deliverable;
@@ -82,7 +81,7 @@ class CheckoutValidator extends RequiredFields
     /**
      * Set is the current order deliverable (requires delivery fields)
      *
-     * @param bool  $deliverable  Is the current order deliverable (requires delivery fields)
+     * @param  bool $deliverable Is the current order deliverable (requires delivery fields)
      * @return self
      */
     public function setDeliverable($deliverable)
@@ -112,7 +111,7 @@ class CheckoutValidator extends RequiredFields
     /**
      * Set is the form currently using the location dropdown?
      *
-     * @param boolean  $location_dropdown  Is the form currently using the location dropdown?
+     * @param  boolean $location_dropdown Is the form currently using the location dropdown?
      * @return self
      */
     public function setLocationDropdown($location_dropdown)

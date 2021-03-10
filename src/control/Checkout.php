@@ -37,7 +37,7 @@ use SilverCommerce\ShoppingCart\Model\ShoppingCart;
 /**
  * Controller used to render the checkout process
  *
- * @author i-lateral (http://www.i-lateral.com)
+ * @author  i-lateral (http://www.i-lateral.com)
  * @package checkout
  */
 class Checkout extends Controller
@@ -48,7 +48,8 @@ class Checkout extends Controller
      *
      * NOTE If you alter routes.yml, you MUST alter this.
      * \SilverStripe\GraphQL\Auth\MemberAuthenticator;
-     * @var string
+     *
+     * @var    string
      * @config
      */
     private static $url_segment = 'checkout';
@@ -56,7 +57,7 @@ class Checkout extends Controller
     /**
      * whether or not the cleaning task should be left to a cron job
      *
-     * @var boolean
+     * @var    boolean
      * @config
      */
     private static $cron_cleaner = false;
@@ -123,7 +124,7 @@ class Checkout extends Controller
      *
      * NOTE: Be careful changing this as most of these keys are required
      *
-     * @var array
+     * @var    array
      * @config
      */
     private static $omnipay_map = [
@@ -152,7 +153,7 @@ class Checkout extends Controller
     /**
      * Estimate linked to this checkout process
      *
-     * @var Estimate
+     * @var    Estimate
      * @config
      */
     private $estimate = null;
@@ -173,7 +174,8 @@ class Checkout extends Controller
         return $estimate;
     }
 
-    /**country
+    /**
+     * country
      * Is an estimate set? return false if not
      *
      * @return boolean
@@ -225,7 +227,7 @@ class Checkout extends Controller
     /**
      * Get an absolute link to this controller
      *
-     * @param string $action The action you want to add to the link
+     * @param  string $action The action you want to add to the link
      * @return string
      */
     public function AbsoluteLink($action = null)
@@ -237,7 +239,7 @@ class Checkout extends Controller
      * Get a relative (to the root url of the site) link to this
      * controller
      *
-     * @param string $action The action you want to add to the link
+     * @param  string $action The action you want to add to the link
      * @return string
      */
     public function RelativeLink($action = null)
@@ -250,7 +252,8 @@ class Checkout extends Controller
 
     /**
      * If content controller exists, return it's menu function
-     * @param int $level Menu level to return.
+     *
+     * @param  int $level Menu level to return.
      * @return ArrayList
      */
     public function getMenu($level = 1)
@@ -297,7 +300,6 @@ class Checkout extends Controller
 
     /**
      * Initial login/details screen for the checkout
-     *
      */
     public function index()
     {
@@ -328,10 +330,12 @@ class Checkout extends Controller
                     $i++;
                 }
 
-                $handler = $auth->getLoginHandler(Controller::join_links(
-                    $link,
-                    $name
-                ));
+                $handler = $auth->getLoginHandler(
+                    Controller::join_links(
+                        $link,
+                        $name
+                    )
+                );
 
                 $login_form = $handler->LoginForm();
 
@@ -364,11 +368,13 @@ class Checkout extends Controller
         // Update customer form with current estimate
         $customer_form->loadDataFrom($this->getEstimate());
 
-        $this->customise([
+        $this->customise(
+            [
             'Title'     => _t('SilverCommerce\Checkout.Checkout', "Checkout"),
             "LoginForm" => $login_form,
             "Form"      => $customer_form
-        ]);
+            ]
+        );
 
         $this->extend("onBeforeIndex");
 
@@ -400,9 +406,11 @@ class Checkout extends Controller
             return $this->redirect($this->Link('payment'));
         }
 
-        $this->customise([
+        $this->customise(
+            [
             'Form' => $this->PostageForm()
-        ]);
+            ]
+        );
 
         $this->extend("onBeforePostage");
 
@@ -444,10 +452,12 @@ class Checkout extends Controller
             $gateway_form = $this->GatewayForm();
             $payment_form = $this->PaymentForm();
 
-            $this->customise([
+            $this->customise(
+                [
                 "GatewayForm" => $gateway_form,
                 "PaymentForm" => $payment_form
-            ]);
+                ]
+            );
 
             $this->extend("onBeforePayment");
 
@@ -525,7 +535,8 @@ class Checkout extends Controller
             return $this->redirect($shopping_cart->Link());
         }
 
-        $this->customise([
+        $this->customise(
+            [
             'Title' => _t(
                 'Checkout.OrderProblem',
                 'There was a problem with your order'
@@ -534,7 +545,8 @@ class Checkout extends Controller
                 'Checkout.NoEstimateContent',
                 'Their was a problem retrieveing the details of your order, please return to the shopping cart and try again.'
             )
-        ]);
+            ]
+        );
 
         $this->extend("onBeforeNoEstimate");
 
@@ -616,17 +628,21 @@ class Checkout extends Controller
 
         if (isset($proceed_action)) {
             $fields = $form->Fields();
-            $fields->push(HiddenField::create(
-                "CompleteURL",
-                null,
-                $this->Link("payment")
-            ));
+            $fields->push(
+                HiddenField::create(
+                    "CompleteURL",
+                    null,
+                    $this->Link("payment")
+                )
+            );
 
             $proceed_action
-                ->setTitle(_t(
-                    'SilverCommerce\Checkout.PayNow',
-                    "Pay Now"
-                ))->removeExtraClass("btn-secondary")
+                ->setTitle(
+                    _t(
+                        'SilverCommerce\Checkout.PayNow',
+                        "Pay Now"
+                    )
+                )->removeExtraClass("btn-secondary")
                 ->addExtraClass("btn-success");
         }
 
@@ -637,10 +653,10 @@ class Checkout extends Controller
     }
 
         /**
-     * Generate a gateway form to select available gateways
-     *
-     * @return Form
-     */
+         * Generate a gateway form to select available gateways
+         *
+         * @return Form
+         */
     public function GatewayForm()
     {
         // If no estimate found, generate error
@@ -663,10 +679,12 @@ class Checkout extends Controller
             )->setValue($gateway);
 
             $actions
-                ->add(FormAction::create(
-                    'doUpdatePayment',
-                    _t('SilverCommerce\Checkout.ChangeGateway', 'Change Payment Type')
-                )->addExtraClass('checkout-action-next'));
+                ->add(
+                    FormAction::create(
+                        'doUpdatePayment',
+                        _t('SilverCommerce\Checkout.ChangeGateway', 'Change Payment Type')
+                    )->addExtraClass('checkout-action-next')
+                );
         } catch (Exception $e) {
             $payment_field = ReadonlyField::create(
                 "PaymentMethodID",
@@ -680,9 +698,11 @@ class Checkout extends Controller
             "GatewayForm",
             FieldList::create($payment_field),
             $actions,
-            RequiredFields::create(array(
+            RequiredFields::create(
+                array(
                 "PaymentMethodID"
-            ))
+                )
+            )
         );
 
         $this->extend("updateGatewayForm", $form);
@@ -713,7 +733,7 @@ class Checkout extends Controller
                     "doSubmitPayment",
                     _t("SilverCommerce\Checkout.PayNow", "Pay Now")
                 )->addExtraClass("btn btn-success btn-block")
-                ->setUseButtonTag(true)
+                    ->setUseButtonTag(true)
             )
         );
 
@@ -725,8 +745,8 @@ class Checkout extends Controller
     /**
      * Update the selected payment gateway
      *
-     * @param array $data
-     * @param Form $form
+     * @param  array $data
+     * @param  Form  $form
      * @return redirect
      */
     public function doUpdatePayment($data, $form)
@@ -788,10 +808,12 @@ class Checkout extends Controller
                 MathsHelper::round($order->Total, 2),
                 $currency_code
             )->setSuccessUrl($this->AbsoluteLink('complete'))
-            ->setFailureUrl(Controller::join_links(
-                $this->AbsoluteLink('complete'),
-                "error"
-            ));
+            ->setFailureUrl(
+                Controller::join_links(
+                    $this->AbsoluteLink('complete'),
+                    "error"
+                )
+            );
         
         // Map order ID & save to generate an ID
         $payment->InvoiceID = $order->ID;
@@ -817,8 +839,8 @@ class Checkout extends Controller
      * Generate a random number based on the current time, a random int
      * and a third int that can be passed as a param.
      *
-     * @param $int integer that can make the number "more random"
-     * @param $length Length of the string
+     * @param  $int    integer that can make the number "more random"
+     * @param  $length Length of the string
      * @return Int
      */
     public static function getRandomNumber($int = 1, $length = 16)

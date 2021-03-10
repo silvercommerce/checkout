@@ -11,8 +11,8 @@ use SilverCommerce\OrdersAdmin\Model\Estimate;
  * Add association to an order to payments and add
  * setting order status on capture.
  *
- * @author Mo <morven@ilateral.co.uk>
- * @package checkout
+ * @author     Mo <morven@ilateral.co.uk>
+ * @package    checkout
  * @subpackage extensions
  */
 class PaymentExtension extends DataExtension
@@ -24,7 +24,7 @@ class PaymentExtension extends DataExtension
     /**
      * Process attached order when payment is taken
      *
-     * @param ServiceResponse $response
+     * @param  ServiceResponse $response
      * @return void
      */
     public function onCaptured($response)
@@ -50,7 +50,7 @@ class PaymentExtension extends DataExtension
     /**
      * Process attached order when payment is refunded
      *
-     * @param ServiceResponse $response
+     * @param  ServiceResponse $response
      * @return void
      */
     public function onRefunded($response)
@@ -66,7 +66,7 @@ class PaymentExtension extends DataExtension
     /**
      * Process attached order when payment is voided/cancelled
      *
-     * @param ServiceResponse $response
+     * @param  ServiceResponse $response
      * @return void
      */
     public function onVoid($response)

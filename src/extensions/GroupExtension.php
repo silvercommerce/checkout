@@ -9,8 +9,8 @@ use SilverStripe\ORM\DB;
 /**
  * Generate a default customers group
  *
- * @author Mo <morven@ilateral.co.uk>
- * @package checkout
+ * @author     Mo <morven@ilateral.co.uk>
+ * @package    checkout
  * @subpackage extensions
  */
 class GroupExtension extends DataExtension
