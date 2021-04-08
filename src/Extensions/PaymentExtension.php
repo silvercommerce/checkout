@@ -36,8 +36,10 @@ class PaymentExtension extends DataExtension
             $order_amount = MathsHelper::round($order->Total, 2);
 
             // If our payment is the value of the order, mark paid
-            // else mark part paid
-            if (abs(($payment_amount - $order_amount) / $order_amount) < 0.00001) {
+            // else mark part paid (unless order is zero value)
+            if ($order_amount === 0.00 ||
+                abs(($payment_amount - $order_amount) / $order_amount) < 0.00001
+            ) {
                 $order->markPaid();
             } else {
                 $order->markPartPaid();

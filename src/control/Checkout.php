@@ -4,6 +4,7 @@ namespace SilverCommerce\Checkout\Control;
 
 use Exception;
 use NumberFormatter;
+use Omnipay\ZeroValue\Gateway as ZeroValueGateway;
 use SilverStripe\i18n\i18n;
 use SilverStripe\Forms\Form;
 use SilverStripe\View\SSViewer;
@@ -23,16 +24,18 @@ use SilverStripe\Omnipay\Model\Payment;
 use SilverStripe\SiteConfig\SiteConfig;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Subsites\Model\Subsite;
+use SilverCommerce\OrdersAdmin\Model\Invoice;
 use SilverCommerce\Postage\Forms\PostageForm;
 use SilverCommerce\OrdersAdmin\Model\Estimate;
 use SilverStripe\Omnipay\GatewayFieldsFactory;
 use SilverStripe\Security\MemberAuthenticator;
 use SilverCommerce\TaxAdmin\Helpers\MathsHelper;
 use SilverStripe\Omnipay\Service\ServiceFactory;
+use SilverCommerce\ShoppingCart\Model\ShoppingCart;
 use SilverStripe\CMS\Controllers\ContentController;
 use SilverCommerce\ShoppingCart\ShoppingCartFactory;
 use SilverCommerce\Checkout\Forms\CustomerDetailsForm;
-use SilverCommerce\ShoppingCart\Model\ShoppingCart;
+use SilverStripe\Core\Config\Config;
 
 /**
  * Controller used to render the checkout process
@@ -49,7 +52,7 @@ class Checkout extends Controller
      * NOTE If you alter routes.yml, you MUST alter this.
      * \SilverStripe\GraphQL\Auth\MemberAuthenticator;
      *
-     * @var    string
+     * @var string
      * @config
      */
     private static $url_segment = 'checkout';
@@ -57,10 +60,19 @@ class Checkout extends Controller
     /**
      * whether or not the cleaning task should be left to a cron job
      *
-     * @var    boolean
+     * @var boolean
      * @config
      */
     private static $cron_cleaner = false;
+
+    /**
+     * Name of a gateway used for a zero value payment
+     * (auto completed)
+     *
+     * @var string
+     * 
+     */
+    private static $zero_gateway = ZeroValueGateway::GATEWAY_NAME;
 
     /**
      * Setup default templates for this controller
@@ -188,7 +200,7 @@ class Checkout extends Controller
     /**
      * Get a payment method to use (either the default or from a session)
      *
-     * @return void
+     * @return string
      */
     public function getPaymentMethod()
     {
@@ -209,6 +221,77 @@ class Checkout extends Controller
         }
 
         return $method;
+    }
+
+    /**
+     * Create a new payment and configure it using the provided
+     * invoice.
+     *
+     * @param Invoice $invoice
+     *
+     * @return Payment
+     */
+    protected function createPayment(Invoice $invoice, string $payment_method)
+    {
+        $config = SiteConfig::current_site_config();
+
+        // Get three digit currency code
+        $number_format = new NumberFormatter(
+            $config->SiteLocale,
+            NumberFormatter::CURRENCY
+        );
+        $currency_code = $number_format
+            ->getTextAttribute(NumberFormatter::CURRENCY_CODE);
+
+        $payment = Payment::create()
+            ->init(
+                $payment_method,
+                MathsHelper::round($invoice->Total, 2),
+                $currency_code
+            )->setSuccessUrl($this->AbsoluteLink('complete'))
+            ->setFailureUrl(
+                Controller::join_links(
+                    $this->AbsoluteLink('complete'),
+                    "error"
+                )
+            );
+        
+        // Map order ID & save to generate an ID
+        $payment->InvoiceID = $invoice->ID;
+        
+        return $payment;
+    }
+
+    /**
+     * Map our order data to an array that can be passed
+     * to omnipay.
+     *
+     * @param Estimate $order
+     * @param array    $data
+     *
+     * @return array
+     */
+    protected function collectOmnipayData(Estimate $order, array $data = [])
+    {
+        $omnipay_data = [];
+        $omnipay_map = $this->config()->omnipay_map;
+
+        foreach ($omnipay_map as $inv_key => $op_key) {
+            if (!empty($order->{$inv_key})) {
+                $omnipay_data[$op_key] = $order->{$inv_key};
+            }
+        }
+
+        $omnipay_data = array_merge($omnipay_data, $data);
+
+        // Set a description for this payment
+        $omnipay_data["description"] = _t(
+            "Order.PaymentDescription",
+            "Payment for Order: {ordernumber}",
+            ['ordernumber' => $order->FullRef]
+        );
+
+        return $omnipay_data;
     }
 
     /**
@@ -451,6 +534,20 @@ class Checkout extends Controller
         try {
             $gateway_form = $this->GatewayForm();
             $payment_form = $this->PaymentForm();
+
+            // If estimate has zero value, then automatically generate
+            // a payment, mark as paid and complete
+            if ($estimate->getTotal() == 0) {
+                $zero_gateway = $this->config()->zero_gateway;
+        
+                Config::modify()->set(
+                    Payment::class,
+                    'allowed_gateways',
+                    [$zero_gateway]
+                );
+            
+                return $this->doSubmitPayment([], $payment_form);
+            }
 
             $this->customise(
                 [
@@ -764,67 +861,17 @@ class Checkout extends Controller
     }
 
     public function doSubmitPayment($data, $form)
-    {
-        $session = $this
-            ->getRequest()
-            ->getSession();
-        
+    {   
         $order = $this->getEstimate();
-        $order = $order->convertToInvoice();
+        $invoice = $order->convertToInvoice();
+        $omnipay_data = $this->collectOmnipayData($invoice, $data);
 
-        $config = SiteConfig::current_site_config();
-
-        // Get thre digit currency code
-        $number_format = new NumberFormatter(
-            $config->SiteLocale,
-            NumberFormatter::CURRENCY
-        );
-        $currency_code = $number_format
-            ->getTextAttribute(NumberFormatter::CURRENCY_CODE);
-        
-        // Map our order data to an array to omnipay
-        $omnipay_data = [];
-        $omnipay_map = $this->config()->omnipay_map;
-        
-        foreach ($omnipay_map as $inv_key => $op_key) {
-            if (!empty($order->{$inv_key})) {
-                $omnipay_data[$op_key] = $order->{$inv_key};
-            }
-        }
-        
-        $omnipay_data = array_merge($omnipay_data, $data);
-
-        // Set a description for this payment
-        $omnipay_data["description"] = _t(
-            "Order.PaymentDescription",
-            "Payment for Order: {ordernumber}",
-            ['ordernumber' => $order->FullRef]
-        );
-
-        // Create the payment object. We pass the desired success and failure URLs as parameter to the payment
-        $payment = Payment::create()
-            ->init(
-                $this->getPaymentMethod(),
-                MathsHelper::round($order->Total, 2),
-                $currency_code
-            )->setSuccessUrl($this->AbsoluteLink('complete'))
-            ->setFailureUrl(
-                Controller::join_links(
-                    $this->AbsoluteLink('complete'),
-                    "error"
-                )
-            );
-        
-        // Map order ID & save to generate an ID
-        $payment->InvoiceID = $order->ID;
+        $payment = $this->createPayment($invoice, $this->getPaymentMethod());
         $payment->write();
 
         // Add an extension before we finalise the payment
         // so we can overwrite our data
         $this->extend("onBeforeSubmit", $payment, $order, $omnipay_data);
-
-        $service = ServiceFactory::create()
-            ->getService($payment, ServiceFactory::INTENT_PAYMENT);
 
         $response = ServiceFactory::create()
             ->getService($payment, ServiceFactory::INTENT_PAYMENT)
