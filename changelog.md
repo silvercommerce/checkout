@@ -41,3 +41,8 @@ Initial stable release
 ## 1.1.5
 
 * After delivery address is selected, re-calculate tax
+
+## 1.2.0
+
+* Switch to a simple stepped checkout layout (allowing custom request handlers to be added to the checkout in any order)
+* Use a custom version of OmniPay Manual gateway to handle zero value transactions.
