@@ -253,7 +253,7 @@ class CustomerDetailsForm extends Form
                         'Country',
                         _t('SilverCommerce\Checkout.Country', 'Country'),
                         i18n::getData()->getCountries(),
-                        Locale::getRegion(i18n::get_locale())
+                        strtolower(Locale::getRegion(i18n::get_locale()))
                     ),
                     RegionSelectionField::create(
                         "County",
