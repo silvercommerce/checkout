@@ -396,6 +396,7 @@ class Checkout extends Controller
         $customer_form = $this->CustomerForm();
         $config = SiteConfig::current_site_config();
         $member = Security::getCurrentUser();
+        $estimate = $this->getEstimate();
 
         if (!$member && ($config->CheckoutLoginForm || !$config->CheckoutAllowGuest)) {
             try {
@@ -440,24 +441,22 @@ class Checkout extends Controller
         // shopping cart, merge defined estimate with the
         // logged in users estimate
         if (class_exists(ShoppingCartFactory::class) && $member) {
-            $estimate = $this->getEstimate();
             $cart_estimate = ShoppingCartFactory::create()->getCurrent();
 
             if (!$estimate || (is_a($estimate, ShoppingCart::class) && ($cart_estimate->ID != $estimate->ID))) {
                 $this->setEstimate($cart_estimate);
+                $estimate = $cart_estimate;
             }
         }
 
-        // Update customer form with current estimate
-        $customer_form->loadDataFrom($this->getEstimate());
+        // Update customer form with current estimate (if data is available)
+        $customer_form->loadDataFrom($estimate, Form::MERGE_IGNORE_FALSEISH);
 
-        $this->customise(
-            [
+        $this->customise([
             'Title'     => _t('SilverCommerce\Checkout.Checkout', "Checkout"),
             "LoginForm" => $login_form,
             "Form"      => $customer_form
-            ]
-        );
+        ]);
 
         $this->extend("onBeforeIndex");
 
