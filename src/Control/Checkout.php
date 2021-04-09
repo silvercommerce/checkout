@@ -870,13 +870,13 @@ class Checkout extends Controller
 
         // Add an extension before we finalise the payment
         // so we can overwrite our data
-        $this->extend("onBeforeSubmit", $payment, $order, $omnipay_data);
+        $this->extend("onBeforeSubmit", $payment, $invoice, $omnipay_data);
 
         $response = ServiceFactory::create()
             ->getService($payment, ServiceFactory::INTENT_PAYMENT)
             ->initiate($omnipay_data);
 
-        $this->extend("onBeforeRedirect", $payment, $order, $response);
+        $this->extend("onBeforeRedirect", $payment, $invoice, $response);
 
         return $response->redirectOrRespond();
     }
