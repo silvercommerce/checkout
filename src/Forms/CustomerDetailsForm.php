@@ -21,11 +21,12 @@ use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Security\IdentityStore;
 use SilverCommerce\ContactAdmin\Model\Contact;
 use SilverCommerce\OrdersAdmin\Model\Estimate;
+use SilverCommerce\OrdersAdmin\Model\LineItem;
 use SilverStripe\Forms\ConfirmedPasswordField;
 use SilverCommerce\ContactAdmin\Model\ContactLocation;
 use SilverCommerce\GeoZones\Forms\RegionSelectionField;
-use ilateral\SilverStripe\Users\Control\RegisterController;
 use SilverCommerce\OrdersAdmin\Factory\LineItemFactory;
+use ilateral\SilverStripe\Users\Control\RegisterController;
 
 /**
  * Form for collecting customer details and assigning them to
@@ -602,9 +603,16 @@ class CustomerDetailsForm extends Form
             $contact->write();
         }
 
-        // Loop through the estimate's items and update them (so tax
-        // can be correctly calculated)
+        /**
+         * Loop through the estimate's items and update them (so tax
+         * can be correctly calculated)
+         * @var LineItem $item
+         */
         foreach ($estimate->Items() as $item) {
+            $locked = $item->Locked;
+            $deliverable = $item->Deliverable;
+            $stocked = $item->Stocked;
+
             LineItemFactory::create()
                 ->setItem($item)
                 ->setParent($estimate) // Force estimate to pickup new delivery

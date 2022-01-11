@@ -28,7 +28,7 @@
           "silverstripe/framework": "~4.0",
           "silverstripe/silverstripe-omnipay": "~3.0",
           "silvercommerce/settings": "~1.0",
-          "silvercommerce/orders-admin": "~1.0",
+          "silvercommerce/orders-admin": "^1.5",
           "silvercommerce/contact-admin": "~1.0",
           "silvercommerce/postage": "~1.0"
       },
