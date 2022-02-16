@@ -11,17 +11,28 @@
         <div class="row line">
             <div class="unit size2of3 col-xs-12 col-sm-8">
                 <% if $LoginForm %>
-                    <h2><%t Framework.Login "Login" %></h2>
-                    $LoginForm
-                    <h3 class="clearfix text-center legend">
-                        <%t Checkout.OR "OR" %>
-                    </h3>
+                    <div id="CheckoutLoginHolder" class="login-holder collapse mb-4">
+                        $LoginForm
+
+                        <hr/>
+                    </div>
                 <% end_if %>
 
                 <% if $Form %>
-                    <h2 class="legend">
+                    <h2 class="legend mb-4">
                         <%t Checkout.PaymentDetails 'Enter Payment Details' %>
+
+                        <% if $LoginForm %>
+                            <button
+                                class="btn btn-lg btn-outline-dark login-toggle ml-md-4"
+                                data-toggle="collapse"
+                                data-target="#CheckoutLoginHolder"
+                            >
+                                <%t Checkout.AlreadyHaveAccount 'Already have an account?' %>
+                            </button>
+                        <% end_if %>
                     </h2>
+
                     $Form
                 <% end_if %>
             </div>
