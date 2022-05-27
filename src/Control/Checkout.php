@@ -333,25 +333,6 @@ class Checkout extends Controller
         );
     }
 
-    /**
-     * If content controller exists, return it's menu function
-     *
-     * @param  int $level Menu level to return.
-     * @return ArrayList
-     */
-    public function getMenu($level = 1)
-    {
-        if (class_exists(ContentController::class)) {
-            $controller = ContentController::singleton();
-            return $controller->getMenu($level);
-        }
-    }
-
-    public function Menu($level)
-    {
-        return $this->getMenu();
-    }
-
     public function init()
     {
         parent::init();
