@@ -49,3 +49,4 @@ Initial stable release
 * Ensure customer details form loads default values correctly
 * Allow setting item deliverability to line items
 * Hide login form behind toggle button during checkout process
+* Clean up order summary a little
