@@ -44,9 +44,13 @@ Initial stable release
 
 ## 1.2.0
 
-* Switch to a simple stepped checkout layout (allowing custom request handlers to be added to the checkout in any order)
 * Use a custom version of OmniPay Manual gateway to handle zero value transactions.
 * Ensure customer details form loads default values correctly
 * Allow setting item deliverability to line items
 * Hide login form behind toggle button during checkout process
 * Clean up order summary a little
+* SS5 support
+
+## 2.0.0
+
+* Switch to a simple stepped checkout layout (allowing custom request handlers to be added to the checkout in any order)
