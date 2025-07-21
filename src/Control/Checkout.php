@@ -651,8 +651,8 @@ class Checkout extends Controller
 
         $form = CustomerDetailsForm::create(
             $this,
+            $this->getEstimate(),
             'CustomerForm',
-            $this->getEstimate()
         );
 
         $data = $session->get("Checkout." . $form->FormName() . ".data");

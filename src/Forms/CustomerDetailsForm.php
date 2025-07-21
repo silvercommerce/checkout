@@ -86,8 +86,11 @@ class CustomerDetailsForm extends Form
         return $this;
     }
 
-    public function __construct($controller, $name = "CustomerDetailsForm", Estimate $estimate)
-    {
+    public function __construct(
+        $controller,
+        Estimate $estimate,
+        $name = "CustomerDetailsForm",
+    ) {
         $member = Security::getCurrentUser();
         $contact = ($member) ? $member->Contact() : null;
         $config = SiteConfig::current_site_config();
