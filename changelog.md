@@ -46,6 +46,7 @@ Initial stable release
 
 * Use a custom version of OmniPay Manual gateway to handle zero value transactions.
 * Ensure customer details form loads default values correctly
+* PHP8.* fixes
 * Allow setting item deliverability to line items
 * Hide login form behind toggle button during checkout process
 * Clean up order summary a little
