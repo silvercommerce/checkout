@@ -89,7 +89,7 @@ class CustomerDetailsForm extends Form
     public function __construct(
         $controller,
         Estimate $estimate,
-        $name = "CustomerDetailsForm",
+        $name = "CustomerDetailsForm"
     ) {
         $member = Security::getCurrentUser();
         $contact = ($member) ? $member->Contact() : null;
